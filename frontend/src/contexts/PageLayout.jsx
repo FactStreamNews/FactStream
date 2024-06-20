@@ -3,6 +3,8 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
+import { Link } from 'react-router-dom';
+import Button from '@mui/material/Button';
 
 const Navbar = () => (
   <AppBar position="static" style={{ backgroundColor: '#ff4f00' }}>
@@ -10,6 +12,8 @@ const Navbar = () => (
       <Typography variant="h6" component="div">
         FactStream
       </Typography>
+      <Button component={Link} to="/signin" color="inherit">Sign In</Button>
+      <Button component={Link} to="/signup" color="inherit">Sign Up</Button>
     </Toolbar>
   </AppBar>
 );
