@@ -6,6 +6,8 @@ import SignIn from './pages/SignIn';
 import PageLayout from './contexts/PageLayout';
 import NewsPage from './pages/NewsPage';
 import SignUp from './pages/SignUp';
+import {AuthProvider} from './contexts/AuthProvider';
+
 const App = () => {
   //const [routes, setRoutes] = useState([]);
   const routes = [
@@ -16,6 +18,7 @@ const App = () => {
  
   return (
       <Router>
+        <AuthProvider>
           <Suspense fallback={<div>Loading...</div>}>
             <PageLayout>
               <Routes>
@@ -29,6 +32,7 @@ const App = () => {
               </Routes>
               </PageLayout>
           </Suspense>
+          </AuthProvider>
       </Router>
   );
 };
