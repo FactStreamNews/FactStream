@@ -8,12 +8,17 @@ import Button from '@mui/material/Button';
 
 const Navbar = () => (
   <AppBar position="static" style={{ backgroundColor: '#ff4f00' }}>
-    <Toolbar>
-      <Typography variant="h6" component="div">
+    <Toolbar style={{ display: 'flex', justifyContent: 'space-between' }}>
+    <Typography variant="h6" component="div">
+        <Button component={Link} to="/" color="inherit">FactStream</Button>
+      {/*<Typography variant="h6" component="div">
         FactStream
+</Typography>*/}
       </Typography>
+      <div>
       <Button component={Link} to="/signin" color="inherit">Sign In</Button>
       <Button component={Link} to="/signup" color="inherit">Sign Up</Button>
+      </div>
     </Toolbar>
   </AppBar>
 );
