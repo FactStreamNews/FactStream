@@ -15,10 +15,7 @@ const Navbar = () => (
         FactStream
 </Typography>*/}
       </Typography>
-      <div>
       <Button component={Link} to="/signin" color="inherit">Sign In</Button>
-      <Button component={Link} to="/signup" color="inherit">Sign Up</Button>
-      </div>
     </Toolbar>
   </AppBar>
 );
