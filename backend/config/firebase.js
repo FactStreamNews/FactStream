@@ -1,9 +1,8 @@
 // firebase.js
 import admin from 'firebase-admin';
+import serviceAccount from './factstream-7f50e-firebase-adminsdk-fgu50-2a6709092b.json' assert { type: 'json' };
 
-var admin = require("firebase-admin");
 
-var serviceAccount = require("backend/config/factstream-7f50e-firebase-adminsdk-fgu50-a20695255c.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

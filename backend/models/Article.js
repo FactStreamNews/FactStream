@@ -1,5 +1,5 @@
 // models/Article.js
-import { db } from '../firebase.js';
+import { db } from '../config/firebase.js';
 
 const articlesCollection = db.collection('articles');
 // new article
@@ -14,7 +14,11 @@ export const getArticleById = async (id) => {
   if (!doc.exists) {
     throw new Error('Article not found');
   }
-  return doc.data();
+  const data = doc.data();
+
+  console.log(data);
+
+  return data;
 };
 
 // update for likes count etc
