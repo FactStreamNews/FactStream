@@ -1,11 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const NewsPage = () => {
-  const articles = [
-    { title: 'Article 1', content: 'Content for article 1...' },
-    { title: 'Article 2', content: 'Content for article 2...' },
-    { title: 'Article 3', content: 'Content for article 3...' },
-  ];
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const response = await axios.get('/articles');
+        const articlesWithFormattedDates = response.data.map(article => ({
+          ...article,
+          published: new Date(article.published._seconds * 1000).toLocaleString() // convert time stamp to string
+        }));
+        setArticles(articlesWithFormattedDates);
+      } catch (error) {
+        console.error('Error fetching articles:', error);
+      }
+    };
+
+    fetchArticles();
+  }, []);
 
   return (
     <div>
@@ -14,7 +28,9 @@ const NewsPage = () => {
         {articles.map((article, index) => (
           <li key={index}>
             <h2>{article.title}</h2>
-            <p>{article.content}</p>
+            <p>{article.content || 'No content available'}</p>
+            <p>Published on: {article.published}</p> {}
+            <a href={article.link}>Read more</a>
           </li>
         ))}
       </ul>

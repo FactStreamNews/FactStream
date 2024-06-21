@@ -1,7 +1,7 @@
 // SignIn.jsx
 import React, { useState } from "react";
 import { Box, Button, Paper } from "@mui/material";
-import LoginForm from "../components/LogInForm";
+import LoginForm from "../components/Login";
 import SignUpForm from "../components/SignUpForm";
 
 const SignIn = () => {
