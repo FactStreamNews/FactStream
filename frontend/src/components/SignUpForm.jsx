@@ -1,6 +1,6 @@
 // /components/SignUpForm.jsx
 import React, { useState, useContext } from "react";
-import { auth } from "../firebaseConfig";
+import { auth } from "../firebase";
 import { AuthContext } from "../contexts/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { TextField, Button, Typography } from "@mui/material";
