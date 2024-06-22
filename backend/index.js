@@ -5,6 +5,7 @@ import cors from 'cors';
 import { db } from './config/firebase.js';
 import userRoutes from './userRoutes.js';
 import articleRoutes from './routes/article-routes.js';
+import './config/scheduler.js';
 
 dotenv.config ();
 const app = express ();
