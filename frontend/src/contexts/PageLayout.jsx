@@ -5,21 +5,35 @@ import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
 import { Link } from 'react-router-dom';
 import Button from '@mui/material/Button';
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from '../firebase'; // Ensure you have your firebase setup
 
-const Navbar = () => (
-  <AppBar position="static" style={{ backgroundColor: '#ff4f00' }}>
-    <Toolbar style={{ display: 'flex', justifyContent: 'space-between' }}>
-    <Typography variant="h6" component="div">
-        <Button component={Link} to="/" color="inherit">FactStream</Button>
-      {/*<Typography variant="h6" component="div">
-        FactStream
-</Typography>*/}
-      </Typography>
-      <Button component={Link} to="/signin" color="inherit">Sign In</Button>
-    </Toolbar>
-  </AppBar>
-);
+const Navbar = () => {
+  const [user, loading, error] = useAuthState(auth);
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  return (
+    <AppBar position="static" style={{ backgroundColor: '#ff4f00' }}>
+      <Toolbar style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Typography variant="h6" component="div">
+          <Button component={Link} to="/" color="inherit">FactStream</Button>
+        </Typography>
+        {user ? (
+          <Button component={Link} to="/dashboard" color="inherit">Profile</Button>
+        ) : (
+          <Button component={Link} to="/signin" color="inherit">Sign In</Button>
+        )}
+      </Toolbar>
+    </AppBar>
+  );
+};
 const Footer = () => (
   <Grid item xs={12} sx={{ py: 3, mt: 'auto', backgroundColor: '#f8f8f8' }}>
     <Container maxWidth="sm">
