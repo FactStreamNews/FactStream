@@ -4,6 +4,7 @@ import './ArticleList.css';
 
 const NewsPage = () => {
   const [articles, setArticles] = useState([]);
+  const [savedArticles, setSavedArticles] = useState([]);
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -22,6 +23,14 @@ const NewsPage = () => {
     fetchArticles();
   }, []);
 
+  const toggleSave = (index) => {
+    setSavedArticles((prevSavedArticles) =>
+      prevSavedArticles.includes(index)
+        ? prevSavedArticles.filter((item) => item !== index)
+        : [...prevSavedArticles, index]
+    );
+  };
+
   return (
     <div className="article-list">
       <h1>News Articles</h1>
@@ -32,6 +41,9 @@ const NewsPage = () => {
           <div className="article-meta">
             <span>Published on: {article.published}</span>
             <span>Likes: {article.likes || 0}</span>
+            <button onClick={() => toggleSave(index)}>
+              {savedArticles.includes(index) ? 'Unsave' : 'Save'}
+            </button>
           </div>
           <a href={article.link} className="read-more">Read more</a>
         </div>
