@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import './ArticleList.css';
 
 const NewsPage = () => {
   const [articles, setArticles] = useState([]);
@@ -10,7 +11,7 @@ const NewsPage = () => {
         const response = await axios.get('/articles');
         const articlesWithFormattedDates = response.data.map(article => ({
           ...article,
-          published: new Date(article.published._seconds * 1000).toLocaleString() // convert time stamp to string
+          published: new Date(article.published._seconds * 1000).toLocaleString() // convert timestamp to string
         }));
         setArticles(articlesWithFormattedDates);
       } catch (error) {
@@ -22,19 +23,19 @@ const NewsPage = () => {
   }, []);
 
   return (
-    <div>
+    <div className="article-list">
       <h1>News Articles</h1>
-      <ul>
-        {articles.map((article, index) => (
-          <li key={index}>
-            <h2>{article.title}</h2>
-            <p>{article.content || 'No content available'}</p>
-            <p>Published on: {article.published}</p> {}
-            <p>Likes: {article.likes || 0}</p>
-            <a href={article.link}>Read more</a>
-          </li>
-        ))}
-      </ul>
+      {articles.map((article, index) => (
+        <div key={index} className="article-item">
+          <h2>{article.title}</h2>
+          <p>{article.content || 'No content available'}</p>
+          <div className="article-meta">
+            <span>Published on: {article.published}</span>
+            <span>Likes: {article.likes || 0}</span>
+          </div>
+          <a href={article.link} className="read-more">Read more</a>
+        </div>
+      ))}
     </div>
   );
 };
