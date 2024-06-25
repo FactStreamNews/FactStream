@@ -37,6 +37,7 @@ const NewsPage = () => {
       {articles.map((article, index) => (
         <div key={index} className="article-item">
           <h2>{article.title}</h2>
+          <img src={article.imgUrl}></img>
           <p>{article.content || 'No content available'}</p>
           <div className="article-meta">
             <span>Published on: {article.published}</span>

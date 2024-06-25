@@ -36,7 +36,3 @@ export const updateUserById = async (userId, name, password, bio) => { // add al
     await userCollection.doc(userId).update(name);
     // add more for other fields
 };
-
-=======
-}
-
