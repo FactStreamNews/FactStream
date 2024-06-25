@@ -3,7 +3,14 @@ import FeedParser from 'feedparser';
 import request from 'request';
 import { db } from './firebase.js'; 
 
-const fetchAndStoreFeeds = () => {
+const fetchAndStoreFeeds = async () => {
+
+  const articlesSnapshot = await db.collection('articles').get();
+  // upperbound to 50, in future, would delete oldest and replace with new
+    if (articlesSnapshot.size >= 50) {
+      console.log('The articles collection already has 50 or more documents. Skipping the fetch.');
+      return;
+    }
     // TODO change to list of urls
   const req = request('http://feeds.bbci.co.uk/news/rss.xml');
   const feedparser = new FeedParser();
@@ -28,11 +35,28 @@ const fetchAndStoreFeeds = () => {
     let item;
     while ((item = this.read())) {
       let imageUrl = '';
-        if (item['media:content'] && item['media:content'].url) {
-          imageUrl = item['media:content'].url;
-        } else if (item['media:thumbnail'] && item['media:thumbnail'].url) {
-          imageUrl = item['media:thumbnail'].url;
-        } 
+
+    // console.log('Processing item:', item);
+
+    // Check if 'media:content' exists and has a URL
+    if (item['media:content'] && item['media:content'].url) {
+      imageUrl = item['media:content'].url;
+    } 
+    // Check if 'media:thumbnail' exists and has a URL
+    else if (item['media:thumbnail'] && item['media:thumbnail']['@'] && item['media:thumbnail']['@'].url) {
+      imageUrl = item['media:thumbnail']['@'].url;
+    } 
+    // Check if 'image' exists and has a URL
+    else if (item.image && item.image.url) {
+      imageUrl = item.image.url;
+    } else {
+      console.log('No media:content, media:thumbnail, or image URL found');
+    }
+
+    console.log('Image URL:', imageUrl);
+
+
+    
       db.collection('articles').add({
         title: item.title,
         link: item.link,
@@ -49,7 +73,7 @@ const fetchAndStoreFeeds = () => {
 };
 
 // set cron expression to once an hour
-cron.schedule('0 * * * *', () => {
+cron.schedule('2 * * * *', () => {
   console.log('Fetching and storing feeds...');
   fetchAndStoreFeeds();
 });
