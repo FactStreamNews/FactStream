@@ -15,6 +15,7 @@ export const newUser = async (user) => {
   // get user
 export const getUserById = async (userId) => {
     return await userCollection.doc(userId).get().data() || null;
+
 }
 
 // get all users
@@ -35,4 +36,7 @@ export const updateUserById = async (userId, name, password, bio) => { // add al
     await userCollection.doc(userId).update(name);
     // add more for other fields
 };
+
+=======
+}
 

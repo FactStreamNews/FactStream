@@ -30,6 +30,7 @@ const NewsPage = () => {
             <h2>{article.title}</h2>
             <p>{article.content || 'No content available'}</p>
             <p>Published on: {article.published}</p> {}
+            <p>Likes: {article.likes || 0}</p>
             <a href={article.link}>Read more</a>
           </li>
         ))}

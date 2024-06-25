@@ -19,6 +19,7 @@ const App = () => {
     { path: '/signin', component: SignIn },
     {path: '/home', component: Home}, 
     {path: '/dashboard', component: Dashboard},
+    {path: '/register', component: Register}
 ];
  
 return (
