@@ -67,6 +67,7 @@ const registerWithEmailAndPassword = async (name, email, password) => {
       name,
       authProvider: "local",
       email,
+      savedArticles: [],
     });
   } catch (err) {
     console.error(err);

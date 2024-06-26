@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 import './ArticleList.css';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../firebase'; // Ensure you have your firebase setup
 
 const NewsPage = () => {
   const [articles, setArticles] = useState([]);
   const [savedArticles, setSavedArticles] = useState([]);
+  const [user, loading, error] = useAuthState(auth);
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -43,9 +46,11 @@ const NewsPage = () => {
           <div className="article-meta">
             <span>Published on: {article.published}</span>
             <span>Likes: {article.likes || 0}</span>
+            {user && (
             <button onClick={() => toggleSave(index)}>
               {savedArticles.includes(index) ? 'Unsave' : 'Save'}
             </button>
+      )}
           </div>
           <Link 
             to={`/articles/${article.id}`} // Example route path within FactStream
