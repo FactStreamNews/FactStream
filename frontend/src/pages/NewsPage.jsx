@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 import './ArticleList.css';
 
 const NewsPage = () => {
@@ -37,7 +38,7 @@ const NewsPage = () => {
       {articles.map((article, index) => (
         <div key={index} className="article-item">
           <h2>{article.title}</h2>
-          <img src={article.imgUrl}></img>
+          <img src={article.imgUrl} alt={article.title}></img>
           <p>{article.content || 'No content available'}</p>
           <div className="article-meta">
             <span>Published on: {article.published}</span>
@@ -46,7 +47,12 @@ const NewsPage = () => {
               {savedArticles.includes(index) ? 'Unsave' : 'Save'}
             </button>
           </div>
-          <a href={article.link} className="read-more">Read more</a>
+          <Link 
+            to={`/articles/${article.id}`} // Example route path within FactStream
+            className="read-more"
+          >
+            Read more
+          </Link>
         </div>
       ))}
     </div>
