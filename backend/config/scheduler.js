@@ -67,16 +67,24 @@ const fetchFeed = async (feedUrl, category) => {
     let item;
     while ((item = this.read())) {
       let imageUrl = '';
+      console.log('Processing item:', item);
 
-      if (item['media:content'] && item['media:content'].url) {
-        imageUrl = item['media:content'].url;
-      } else if (item['media:thumbnail'] && item['media:thumbnail']['@'] && item['media:thumbnail']['@'].url) {
+      if (item['media:content'] && item['media:content']['@'] && item['media:content']['@'].url) {
+        imageUrl = item['media:content']['@'].url;
+      } 
+      else if (item['media:thumbnail'] && item['media:thumbnail']['@'] && item['media:thumbnail']['@'].url) {
         imageUrl = item['media:thumbnail']['@'].url;
-      } else if (item.image && item.image.url) {
+      } 
+      else if (item.image && item.image.url) {
         imageUrl = item.image.url;
-      } else {
+      } 
+      else if (item['media:content'] && item['media:content'].url) {
+        imageUrl = item['media:content'].url;
+      } 
+      else {
         console.log('No media:content, media:thumbnail, or image URL found');
       }
+  
 
       console.log('Image URL:', imageUrl);
 
