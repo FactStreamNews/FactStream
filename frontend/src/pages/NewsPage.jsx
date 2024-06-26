@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+import { Link } from 'react-router-dom';
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
-import { updateDoc, doc, arrayUnion, arrayRemove, getDoc, query, collection, where, getDocs } from 'firebase/firestore'; // Import Firestore functions
-import { db } from '../firebase'; // Import Firestore database instance
+import { updateDoc, doc, arrayUnion, arrayRemove, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const NewsPage = () => {
   const [articles, setArticles] = useState([]);
@@ -22,7 +22,8 @@ const NewsPage = () => {
           ...article,
           published: article.published && article.published._seconds 
           ? new Date(article.published._seconds * 1000).toLocaleString() 
-          : 'Unknown'        }));
+          : 'Unknown'
+        }));
         setArticles(articlesWithFormattedDates);
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -34,7 +35,6 @@ const NewsPage = () => {
 
   useEffect(() => {
     if (user) {
-      // Fetch the user's saved articles if the user is signed in
       const fetchSavedArticles = async () => {
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -50,20 +50,26 @@ const NewsPage = () => {
     }
   }, [user]);
 
+  
  /* const toggleSave = (index) => {
-    setSavedArticles((prevSavedArticles) =>
-      prevSavedArticles.includes(index)
-        ? prevSavedArticles.filter((item) => item !== index)
-        : [...prevSavedArticles, index]
-    );
-  };*/
 
+    setSavedArticles((prevSavedArticles) =>
+
+      prevSavedArticles.includes(index)
+
+        ? prevSavedArticles.filter((item) => item !== index)
+
+        : [...prevSavedArticles, index]
+
+    );
+
+  };*/
   const toggleSave = async (index) => {
     if (!user) return;
 
     const articleId = articles[index].id;
     console.log("here");
-    console.log("articleID:", articleId)
+    console.log("articleID:", articleId);
     const q = query(collection(db, "users"), where("uid", "==", user?.uid));
     const doc1 = await getDocs(q);
     const docId = doc1.docs[0].id;
@@ -72,13 +78,11 @@ const NewsPage = () => {
 
     try {
       if (savedArticles.includes(articleId)) {
-        // Remove the article ID from the saved articles list
         await updateDoc(userDocRef, {
           savedArticles: arrayRemove(articleId)
         });
         setSavedArticles(prevSavedArticles => prevSavedArticles.filter(id => id !== articleId));
       } else {
-        // Add the article ID to the saved articles list
         await updateDoc(userDocRef, {
           savedArticles: arrayUnion(articleId)
         });
@@ -119,21 +123,26 @@ const NewsPage = () => {
       <h1>News Articles</h1>
       {articles.map((article, index) => (
         <div key={index} className="article-item">
-          <h2>{article.title}</h2>
+          <h2>
+            <Link to={`/article/${article.id}`}>{article.title}</Link>
+          </h2>
           <h3>{article.category}</h3>
-          <img src={article.imgUrl} alt={article.title}></img>
-          {/* <p>{article.content || 'No content available'}</p> */}
+          <div className="img-container">
+            <Link to={`/article/${article.id}`}>
+              <img src={article.imgUrl} alt={article.title} />
+            </Link>
+          </div>
           <div className="article-meta">
             <span>Published on: {article.published}</span>
             <span>Likes: {article.likes || 0}</span>
             {user && (
-            <button onClick={() => toggleSave(index)}>
-              {savedArticles.includes(article.id) ? 'Unsave' : 'Save'}
-            </button>
-      )}
+              <button onClick={() => toggleSave(index)}>
+                {savedArticles.includes(article.id) ? 'Unsave' : 'Save'}
+              </button>
+            )}
           </div>
           <Link 
-            to={`/articles/${article.id}`} // Example route path within FactStream
+            to={`/article/${article.id}`} // Example route path within FactStream
             className="read-more"
           >
             Read more

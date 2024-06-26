@@ -7,6 +7,8 @@ import Reset from "./components/Reset";
 import SignIn from './pages/SignIn';
 import PageLayout from './contexts/PageLayout';
 import NewsPage from './pages/NewsPage';
+import ArticlePage from './pages/ArticlePage';
+
 import {AuthProvider} from './contexts/AuthProvider';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
@@ -16,6 +18,7 @@ const App = () => {
   //const [routes, setRoutes] = useState([]);
   const routes = [
     { path: '/', component: NewsPage },
+    {path: '/article/:id', component: ArticlePage},
     { path: '/signin', component: SignIn },
     {path: '/home', component: Home}, 
     {path: '/dashboard', component: Dashboard},

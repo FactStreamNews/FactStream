@@ -1,0 +1,38 @@
+/* ArticlePage.css */
+
+.article-page {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .article-content {
+    flex: 3;
+  }
+  
+  .article-content img {
+    width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+    border-radius: 8px;
+  }
+  
+  .related-articles {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .related-article-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .related-article-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
