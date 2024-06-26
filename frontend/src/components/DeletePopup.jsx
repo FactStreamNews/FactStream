@@ -4,6 +4,7 @@ import Delete from '../components/Delete';
 
 // to be added to profile page
 const DeletePopup = ({ email }) => {
+    
     const [showPopup, setShowPopup] = useState(true);
     const history = useHistory();
 
