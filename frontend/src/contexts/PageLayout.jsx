@@ -25,11 +25,16 @@ const Navbar = () => {
         <Typography variant="h6" component="div">
           <Button component={Link} to="/" color="inherit">FactStream</Button>
         </Typography>
+        <div>
+          {user && (
+            <Button component={Link} to="/savedArticles" color="inherit">Saved Articles</Button>
+          )}
         {user ? (
           <Button component={Link} to="/dashboard" color="inherit">Profile</Button>
         ) : (
           <Button component={Link} to="/signin" color="inherit">Sign In</Button>
         )}
+        </div>
       </Toolbar>
     </AppBar>
   );

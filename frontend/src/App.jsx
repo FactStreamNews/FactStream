@@ -10,6 +10,7 @@ import NewsPage from './pages/NewsPage';
 import {AuthProvider} from './contexts/AuthProvider';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
+import SavedArticles from './pages/SavedArticles';
 
 const App = () => {
   //const [routes, setRoutes] = useState([]);
@@ -18,7 +19,8 @@ const App = () => {
     { path: '/signin', component: SignIn },
     {path: '/home', component: Home}, 
     {path: '/dashboard', component: Dashboard},
-    {path: '/register', component: Register}
+    {path: '/register', component: Register},
+    {path: '/savedArticles', component: SavedArticles}
 ];
  
 return (

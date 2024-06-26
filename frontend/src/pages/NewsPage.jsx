@@ -11,6 +11,8 @@ const NewsPage = () => {
   const [articles, setArticles] = useState([]);
   const [savedArticles, setSavedArticles] = useState([]);
   const [user, loading, error] = useAuthState(auth);
+  const [isSaved, setIsSaved] = useState(false);
+
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -85,6 +87,30 @@ const NewsPage = () => {
     } catch (error) {
       console.error('Error updating saved articles:', error);
     }
+  };
+
+  const useIsArticleSaved = (index) => {
+    const [user] = useAuthState(auth);
+    useEffect(() => {
+      const checkIsSaved = async () => {
+        try{
+        const articleId = articles[index].id;
+        const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+        const doc1 = await getDocs(q);
+        const docId = doc1.docs[0].id;
+        const userDocRef = doc(db, "users", docId);
+        const userDocSnap = await getDoc(userDocRef)
+
+        if (userDocSnap.exists()) {
+          const savedArticles = userDocSnap.data().savedArticles || [];
+           setIsSaved(savedArticles.includes(articleId));
+        }
+        } catch (error){
+          console.error("Error checking saved articles");
+        }
+      }
+    }, [user]);
+    return isSaved;
   };
 
 
