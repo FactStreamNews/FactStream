@@ -18,8 +18,9 @@ const NewsPage = () => {
         const response = await axios.get('/articles');
         const articlesWithFormattedDates = response.data.map(article => ({
           ...article,
-          published: new Date(article.published._seconds * 1000).toLocaleString() // convert timestamp to string
-        }));
+          published: article.published && article.published._seconds 
+          ? new Date(article.published._seconds * 1000).toLocaleString() 
+          : 'Unknown'        }));
         setArticles(articlesWithFormattedDates);
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -93,8 +94,9 @@ const NewsPage = () => {
       {articles.map((article, index) => (
         <div key={index} className="article-item">
           <h2>{article.title}</h2>
+          <h3>{article.category}</h3>
           <img src={article.imgUrl} alt={article.title}></img>
-          <p>{article.content || 'No content available'}</p>
+          {/* <p>{article.content || 'No content available'}</p> */}
           <div className="article-meta">
             <span>Published on: {article.published}</span>
             <span>Likes: {article.likes || 0}</span>
