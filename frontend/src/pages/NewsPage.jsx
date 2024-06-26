@@ -3,7 +3,9 @@ import axios from 'axios';
 import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebase'; // Ensure you have your firebase setup
+import { auth } from '../firebase'; 
+import { updateDoc, doc, arrayUnion, arrayRemove, getDoc, query, collection, where, getDocs } from 'firebase/firestore'; // Import Firestore functions
+import { db } from '../firebase'; // Import Firestore database instance
 
 const NewsPage = () => {
   const [articles, setArticles] = useState([]);
@@ -27,13 +29,63 @@ const NewsPage = () => {
     fetchArticles();
   }, []);
 
-  const toggleSave = (index) => {
+  useEffect(() => {
+    if (user) {
+      // Fetch the user's saved articles if the user is signed in
+      const fetchSavedArticles = async () => {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            setSavedArticles(userDoc.data().savedArticles || []);
+          }
+        } catch (error) {
+          console.error('Error fetching saved articles:', error);
+        }
+      };
+
+      fetchSavedArticles();
+    }
+  }, [user]);
+
+ /* const toggleSave = (index) => {
     setSavedArticles((prevSavedArticles) =>
       prevSavedArticles.includes(index)
         ? prevSavedArticles.filter((item) => item !== index)
         : [...prevSavedArticles, index]
     );
+  };*/
+
+  const toggleSave = async (index) => {
+    if (!user) return;
+
+    const articleId = articles[index].id;
+    console.log("here");
+    console.log("articleID:", articleId)
+    const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+    const doc1 = await getDocs(q);
+    const docId = doc1.docs[0].id;
+    const userDocRef = doc(db, "users", docId);
+    console.log("userDocRef", userDocRef);
+
+    try {
+      if (savedArticles.includes(articleId)) {
+        // Remove the article ID from the saved articles list
+        await updateDoc(userDocRef, {
+          savedArticles: arrayRemove(articleId)
+        });
+        setSavedArticles(prevSavedArticles => prevSavedArticles.filter(id => id !== articleId));
+      } else {
+        // Add the article ID to the saved articles list
+        await updateDoc(userDocRef, {
+          savedArticles: arrayUnion(articleId)
+        });
+        setSavedArticles(prevSavedArticles => [...prevSavedArticles, articleId]);
+      }
+    } catch (error) {
+      console.error('Error updating saved articles:', error);
+    }
   };
+
 
   return (
     <div className="article-list">
@@ -48,7 +100,7 @@ const NewsPage = () => {
             <span>Likes: {article.likes || 0}</span>
             {user && (
             <button onClick={() => toggleSave(index)}>
-              {savedArticles.includes(index) ? 'Unsave' : 'Save'}
+              {savedArticles.includes(article.id) ? 'Unsave' : 'Save'}
             </button>
       )}
           </div>
