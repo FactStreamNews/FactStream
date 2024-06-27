@@ -108,7 +108,7 @@ function Dashboard() {
         await deleteDoc(userDocRef); // Delete user data from Firestore
         await deleteUser(auth.currentUser); // Delete user from Firebase Authentication
         alert("Account deleted successfully");
-        navigate("/home");
+        navigate("/");
       } catch (err) {
         console.error(err);
         alert(`An error occurred while deleting the account: ${err.message}`);
