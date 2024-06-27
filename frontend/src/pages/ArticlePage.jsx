@@ -1,12 +1,11 @@
 // src/components/ArticlePage.jsx
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion,arrayRemove } from 'firebase/firestore';
-import { db } from '../config/firebase.js'; 
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove, addDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../config/firebase.js';
 import './ArticlePage.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebase'; 
-
+import { auth } from '../firebase';
 
 const ArticlePage = () => {
   const { id } = useParams();
@@ -14,13 +13,11 @@ const ArticlePage = () => {
   const [relatedArticles, setRelatedArticles] = useState([]);
   const [likes, setLikes] = useState(0); // State to store the likes count
   const [hasLiked, setHasLiked] = useState(false); // State to track if the user has liked the article
-  const [hasSaved, setHasSaved] = useState(false); //State to track if the user saved the article 
+  const [hasSaved, setHasSaved] = useState(false); // State to track if the user saved the article
   const [savedArticles, setSavedArticles] = useState([]);
-
-
   const [user, loading, error] = useAuthState(auth);
 
-  // Fetch the article data based on the id from the URL
+  // Fetch article data
   useEffect(() => {
     const fetchArticle = async () => {
       try {
@@ -29,7 +26,7 @@ const ArticlePage = () => {
         if (articleSnap.exists()) {
           const articleData = articleSnap.data();
           setArticle(articleData);
-          setLikes(articleData.likes || 0); // Initialize the likes state with the value from the article data
+          setLikes(articleData.likes || 0); 
         } else {
           console.log('No such document!');
         }
@@ -40,6 +37,21 @@ const ArticlePage = () => {
 
     fetchArticle();
   }, [id]);
+
+   // check if user liked article
+   useEffect(() => {
+    const checkIfUserLiked = async () => {
+      if (user) {
+        const likesRef = collection(db, 'likes');
+        const q = query(likesRef, where('userId', '==', user.uid), where('articleId', '==', id));
+        const querySnapshot = await getDocs(q);
+        setHasLiked(!querySnapshot.empty);
+      }
+    };
+
+    checkIfUserLiked();
+  }, [user, id]);
+
 
   // Fetch related articles based on the category of the current article
   useEffect(() => {
@@ -84,29 +96,46 @@ const ArticlePage = () => {
     checkIfSaved();
   }, [id]);
 
-  // Handle the like button click
   const handleLike = async () => {
-    if (hasLiked) return; // Prevent multiple likes
+    if (!user) {
+      alert('Please sign in to like articles.');
+      return;
+    }
 
-    const newLikes = likes + 1;
-    setLikes(newLikes);
-    setHasLiked(true);
+    const likesRef = collection(db, 'likes');
+    const articleRef = doc(db, 'articles', id);
+    const userLikeRef = query(likesRef, where('userId', '==', user.uid), where('articleId', '==', id));
+    const userLikeSnapshot = await getDocs(userLikeRef);
+
     try {
-      const articleRef = doc(db, 'articles', id);
-      await updateDoc(articleRef, {
-        likes: newLikes
-      });
-      console.log('Document successfully updated!');
+      if (userLikeSnapshot.empty) {
+        // User is liking the article
+        await addDoc(likesRef, {
+          userId: user.uid,
+          articleId: id
+        });
+        await updateDoc(articleRef, {
+          likes: likes + 1
+        });
+        setLikes(likes + 1);
+        setHasLiked(true);
+      } else {
+        // User is unliking the article
+        const likeDocId = userLikeSnapshot.docs[0].id;
+        const likeDocRef = doc(db, 'likes', likeDocId);
+        await deleteDoc(likeDocRef);
+        await updateDoc(articleRef, {
+          likes: likes - 1
+        });
+        setLikes(likes - 1);
+        setHasLiked(false);
+      }
     } catch (error) {
-      console.error('Error updating document: ', error);
-      setLikes(likes); // Revert likes count in case of an error
-      setHasLiked(false);
+      console.error('Error updating likes:', error);
     }
   };
-
   const toggleSave = async (index) => {
     if (!user) return;
-
 
     const articleId = id;
     console.log("here");
@@ -144,15 +173,14 @@ const ArticlePage = () => {
         <h1>{article.title}</h1>
         <img src={article.imgUrl} alt={article.title} className="article-image" />
          <div className='button-container'>
-         <button
-            className="like-button" // Apply CSS class
+          <button
+            className={`like-button ${hasLiked ? 'liked' : ''}`} 
             onClick={handleLike}
-            disabled={hasLiked}
           >
             {hasLiked ? 'Liked' : 'Like'} ({likes})
           </button>
           <button
-            className="save-button" // Apply CSS class
+            className="save-button" 
             onClick={toggleSave}
           >
             {hasSaved ? 'Unsave' : 'Save'}

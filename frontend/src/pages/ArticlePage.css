@@ -39,24 +39,15 @@
   .like-button {
     background-color: orange; 
     color: white; 
-    border: none; 
-    padding: 10px 20px; 
-    font-size: 16px; 
-    border-radius: 5px; 
-    cursor: pointer; 
-    transition: background-color 0.3s ease; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
   }
   
-  .like-button:hover {
+  .like-button.liked {
     background-color: darkorange; 
-  }
-  
-  .like-button:disabled {
-    background-color: gray; 
-    cursor: not-allowed; 
   }
 
   .save-button {

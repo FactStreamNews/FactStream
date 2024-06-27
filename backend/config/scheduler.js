@@ -113,7 +113,7 @@ const fetchFeed = async (feedUrl, category) => {
 
 
 // set cron expression to once an hour
-cron.schedule('* */2 * * *', () => {
+cron.schedule('0 */2 * * *', () => {
   console.log('Fetching and storing feeds...');
   fetchAndStoreFeeds();
 });
