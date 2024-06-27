@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { getUserById, deleteUserById } from '../services/userService';
-
+import Delete from '../components/Delete';
 
 // contains multiple components
 const Profile = () => {
@@ -12,7 +12,8 @@ const Profile = () => {
         // Fetch user data from API call
         const fetchUserData = async () => {
             // Ask how to read in data from Firebase
-
+            const userData = await getUserById(id);
+            // const user
             const response = await fetch()
             // setUser()
             // setName

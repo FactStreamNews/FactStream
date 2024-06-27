@@ -3,9 +3,9 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import { auth, db, logout } from "../firebase";
-import { updateEmail, updatePassword } from "firebase/auth";
-import { query, collection, getDocs, where, updateDoc} from "firebase/firestore";
-import {doc} from "firebase/firestore";
+import { updateEmail, updatePassword, deleteUser } from "firebase/auth";
+import { query, collection, getDocs, where, updateDoc } from "firebase/firestore";
+import { doc, deleteDoc } from "firebase/firestore";
 
 function Dashboard() {
   const [user, loading, error] = useAuthState(auth);
@@ -66,9 +66,9 @@ function Dashboard() {
       alert("Password updated successfully");
       setNewPassword("");
     } //catch (err) {
-      //console.error(err);
-     // alert("An error occurred while updating the password");
-     finally {
+    //console.error(err);
+    // alert("An error occurred while updating the password");
+    finally {
       setUpdating(false);
     }
   };
@@ -82,13 +82,13 @@ function Dashboard() {
 
   const handleNameUpdate = async () => {
     try {
-    const q = query(collection(db, "users"), where("uid", "==", user?.uid));
-    const doc1 = await getDocs(q);
-    const docId = doc1.docs[0].id;
-    const userDocRef = doc(db, "users", docId);
-    await updateDoc(userDocRef, {
-      name: newName
-    });
+      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+      const doc1 = await getDocs(q);
+      const docId = doc1.docs[0].id;
+      const userDocRef = doc(db, "users", docId);
+      await updateDoc(userDocRef, {
+        name: newName
+      });
       setName(newName);
       setEditingName(false);
       alert("Name updated successfully");
@@ -97,6 +97,25 @@ function Dashboard() {
       alert(`An error occurred while updating the name: ${err.message}`);
     }
   };
+
+  const handleDeleteUser = async () => {
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      try {
+        const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+        const doc1 = await getDocs(q);
+        const docId = doc1.docs[0].id;
+        const userDocRef = doc(db, "users", docId);
+        await deleteDoc(userDocRef); // Delete user data from Firestore
+        await deleteUser(auth.currentUser); // Delete user from Firebase Authentication
+        alert("Account deleted successfully");
+        navigate("/home");
+      } catch (err) {
+        console.error(err);
+        alert(`An error occurred while deleting the account: ${err.message}`);
+      }
+    }
+  };
+
 
   return (
     <div>
@@ -133,6 +152,9 @@ function Dashboard() {
           </button>
         </div>
       </div>
+      <button className="dashboard__btn" onClick={handleDeleteUser}>
+        Delete Account
+      </button>
     </div>
   );
 }

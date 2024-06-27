@@ -2,14 +2,15 @@ import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from 
 import { db } from '../config/firebase.js';
 
 
-// to be added to profile page
+// to be added to profile
 // takes in an email address and deletes the user with the corresponding email address
 async function deleteUser(email) {
+    
     // Access the users collection
     const userCollection = db.collection('users');
 
     // Query through the collection and search for matching email
-    const q = query(usersRef, where("email", "==", email));
+    const q = query(userCollection, where("email", "==", email));
 
     // Execute the query
     const querySnapshot = await getDocs(q);
