@@ -3,9 +3,9 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import { auth, db, logout } from "../firebase";
-import { updateEmail, updatePassword } from "firebase/auth";
+import { updateEmail, updatePassword, deleteUser } from "firebase/auth";
 import { query, collection, getDocs, where, updateDoc } from "firebase/firestore";
-import { doc } from "firebase/firestore";
+import { doc, deleteDoc } from "firebase/firestore";
 
 function Dashboard() {
   const [user, loading, error] = useAuthState(auth);
@@ -152,9 +152,9 @@ function Dashboard() {
           </button>
         </div>
       </div>
-        <button className="dashboard__btn" onClick={handleDeleteUser}>
-          Delete Account
-        </button>
+      <button className="dashboard__btn" onClick={handleDeleteUser}>
+        Delete Account
+      </button>
     </div>
   );
 }
