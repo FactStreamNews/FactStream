@@ -135,11 +135,6 @@ const NewsPage = () => {
           <div className="article-meta">
             <span>Published on: {article.published}</span>
             <span>Likes: {article.likes || 0}</span>
-            {user && (
-              <button onClick={() => toggleSave(index)}>
-                {savedArticles.includes(article.id) ? 'Unsave' : 'Save'}
-              </button>
-            )}
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream

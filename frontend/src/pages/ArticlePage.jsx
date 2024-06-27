@@ -1,9 +1,12 @@
 // src/components/ArticlePage.jsx
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion,arrayRemove } from 'firebase/firestore';
 import { db } from '../config/firebase.js'; 
 import './ArticlePage.css';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../firebase'; 
+
 
 const ArticlePage = () => {
   const { id } = useParams();
@@ -11,6 +14,11 @@ const ArticlePage = () => {
   const [relatedArticles, setRelatedArticles] = useState([]);
   const [likes, setLikes] = useState(0); // State to store the likes count
   const [hasLiked, setHasLiked] = useState(false); // State to track if the user has liked the article
+  const [hasSaved, setHasSaved] = useState(false); //State to track if the user saved the article 
+  const [savedArticles, setSavedArticles] = useState([]);
+
+
+  const [user, loading, error] = useAuthState(auth);
 
   // Fetch the article data based on the id from the URL
   useEffect(() => {
@@ -58,6 +66,24 @@ const ArticlePage = () => {
     }
   }, [article, id]);
 
+  useEffect(() => {
+    const checkIfSaved = async () => {
+      if (user) {
+        const q = query(collection(db, "users"), where("uid", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data();
+          if (userData.savedArticles && userData.savedArticles.includes(id)) {
+            setHasSaved(true);
+          }
+        }
+      }
+    };
+
+    checkIfSaved();
+  }, [id]);
+
   // Handle the like button click
   const handleLike = async () => {
     if (hasLiked) return; // Prevent multiple likes
@@ -78,6 +104,38 @@ const ArticlePage = () => {
     }
   };
 
+  const toggleSave = async (index) => {
+    if (!user) return;
+
+
+    const articleId = id;
+    console.log("here");
+    console.log("articleID:", articleId);
+    const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+    const doc1 = await getDocs(q);
+    const docId = doc1.docs[0].id;
+    const userDocRef = doc(db, "users", docId);
+    console.log("userDocRef", userDocRef);
+
+    try {
+      if (savedArticles.includes(articleId)) {
+        await updateDoc(userDocRef, {
+          savedArticles: arrayRemove(articleId)
+        });
+        setSavedArticles(prevSavedArticles => prevSavedArticles.filter(id => id !== articleId));
+        setHasSaved(false);
+      } else {
+        await updateDoc(userDocRef, {
+          savedArticles: arrayUnion(articleId)
+        });
+        setSavedArticles(prevSavedArticles => [...prevSavedArticles, articleId]);
+        setHasSaved(true);
+      }
+    } catch (error) {
+      console.error('Error updating saved articles:', error);
+    }
+  };
+
   if (!article) return <div>Loading...</div>;
 
   return (
@@ -85,7 +143,7 @@ const ArticlePage = () => {
       <div className="article-content">
         <h1>{article.title}</h1>
         <img src={article.imgUrl} alt={article.title} className="article-image" />
-         <div>
+         <div className='button-container'>
          <button
             className="like-button" // Apply CSS class
             onClick={handleLike}
@@ -93,7 +151,14 @@ const ArticlePage = () => {
           >
             {hasLiked ? 'Liked' : 'Like'} ({likes})
           </button>
+          <button
+            className="save-button" // Apply CSS class
+            onClick={toggleSave}
+          >
+            {hasSaved ? 'Unsave' : 'Save'}
+          </button>
         </div>
+        
         <div
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
