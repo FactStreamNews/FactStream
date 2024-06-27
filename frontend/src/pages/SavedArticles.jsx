@@ -68,7 +68,7 @@ const SavedArticlesPage = () => {
                 <div className="article-meta">
                   <span>Likes: {article.likes || 0}</span>
                   <Link 
-                    to={`/articles/${article.id}`}
+                    to={`/article/${article.id}`}
                     className="read-more"
                   >
                     Read more
