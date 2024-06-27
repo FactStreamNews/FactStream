@@ -1,5 +1,7 @@
 // src/components/ArticlePage.jsx
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+
 import { useParams } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase.js'; 
@@ -56,22 +58,24 @@ const ArticlePage = () => {
 
   return (
     <div className="article-page">
-      <div className="article-content">
-        <h1>{article.title}</h1>
-        <img src={article.imgUrl} alt={article.title} className="article-image" />
-        <p>{article.content}</p>
-      </div>
-      <div className="related-articles">
-        <h2>Related Articles</h2>
-        {relatedArticles.map((relatedArticle, index) => (
-          <div key={index} className="related-article-item">
+    <div className="article-content">
+      <h1>{article.title}</h1>
+      <img src={article.imgUrl} alt={article.title} className="article-image" />
+      <p>{article.content}</p>
+    </div>
+    <div className="related-articles">
+      <h2>Related Articles</h2>
+      {relatedArticles.map((relatedArticle, index) => (
+        <div key={index} className="related-article-item">
+          <Link to={`/article/${relatedArticle.id}`}>
             <h3>{relatedArticle.title}</h3>
             <img src={relatedArticle.imgUrl} alt={relatedArticle.title} className="related-article-image" />
-          </div>
-        ))}
-      </div>
+          </Link>
+        </div>
+      ))}
     </div>
-  );
+  </div>
+);
 };
 
 export default ArticlePage;
