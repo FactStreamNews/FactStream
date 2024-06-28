@@ -1,9 +1,9 @@
 import cron from 'node-cron';
 import FeedParser from 'feedparser';
 import request from 'request';
-import { db } from './firebase.js'; 
+import { db } from './firebase.js';
 
-
+//categories for our RSS feeds
 const feeds = {
   tech: [
     'https://moxie.foxnews.com/google-publisher/tech.xml',
@@ -24,34 +24,59 @@ const feeds = {
     'https://moxie.foxnews.com/google-publisher/travel.xml',
   ],
   general: [
-    'http://feeds.bbci.co.uk/news/rss.xml',
-    'https://moxie.foxnews.com/google-publisher/world.xml',
+    
   ]
 };
 
 const fetchAndStoreFeeds = async () => {
   const articlesSnapshot = await db.collection('articles').get();
-  if (articlesSnapshot.size >= 230) {
-    console.log('The articles collection already has 230 or more documents. Skipping the fetch.');
-    return;
-  }
+  const articlesCount = articlesSnapshot.size;
+  const maxArticles = 230;
+  const maxNewArticles = 50;
+
+  let newArticlesCount = 0;
+  let totalDuplicateCount = 0;
 
   for (const [category, urls] of Object.entries(feeds)) {
     for (const url of urls) {
-      await fetchFeed(url, category);
+      const { newArticles, duplicates } = await fetchFeed(url, category);
+      newArticlesCount += newArticles;
+      totalDuplicateCount += duplicates;
     }
   }
+
+  // delete up to 50 articles to make space for new articles
+  let articlesDeleted = 0;
+  if (articlesCount + newArticlesCount > maxArticles) {
+    const articlesToDelete = (articlesCount + newArticlesCount) - maxArticles;
+    console.log(`The articles collection has ${articlesCount} documents. Deleting ${articlesToDelete} oldest documents to make room.`);
+
+    const oldestArticlesSnapshot = await db.collection('articles').orderBy('published').limit(articlesToDelete).get();
+    const batch = db.batch();
+
+    oldestArticlesSnapshot.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    articlesDeleted = articlesToDelete;
+  }
+
+  
 };
 
 const fetchFeed = async (feedUrl, category) => {
   const req = request(feedUrl);
   const feedparser = new FeedParser();
+  let newArticlesCount = 0;
+  let duplicateCount = 0;
+  let printedDuplicates = 0;
 
-  req.on('error', function(error) {
+  req.on('error', function (error) {
     console.error('Request error:', error);
   });
 
-  req.on('response', function(res) {
+  req.on('response', function (res) {
     if (res.statusCode !== 200) {
       this.emit('error', new Error('Bad status code'));
     } else {
@@ -59,61 +84,63 @@ const fetchFeed = async (feedUrl, category) => {
     }
   });
 
-  feedparser.on('error', function(error) {
+  feedparser.on('error', function (error) {
     console.error('Feedparser error:', error);
   });
 
-  feedparser.on('readable', async function() {
+  feedparser.on('readable', async function () {
     let item;
-    while ((item = this.read())) {
+
+    // Capture image through various RSS formats
+    while ((item = this.read()) && newArticlesCount < 50) {
       let imageUrl = '';
-      console.log('Processing item:', item);
 
       if (item['media:content'] && item['media:content']['@'] && item['media:content']['@'].url) {
         imageUrl = item['media:content']['@'].url;
-      } 
+      }
       else if (item['media:thumbnail'] && item['media:thumbnail']['@'] && item['media:thumbnail']['@'].url) {
         imageUrl = item['media:thumbnail']['@'].url;
-      } 
+      }
       else if (item.image && item.image.url) {
         imageUrl = item.image.url;
-      } 
+      }
       else if (item['media:content'] && item['media:content'].url) {
         imageUrl = item['media:content'].url;
-      } 
+      }
       else {
         console.log('No media:content, media:thumbnail, or image URL found');
       }
-  
 
-      console.log('Image URL:', imageUrl);
-
-      // check for duplicate titles
       const duplicateCheckSnapshot = await db.collection('articles').where('title', '==', item.title).get();
       if (!duplicateCheckSnapshot.empty) {
-        console.log(`Duplicate found for title: ${item.title}. Skipping.`);
+        duplicateCount++;
+        if (printedDuplicates < 3) {
+          console.log(`Duplicate found for title: ${item.title}. Skipping.`);
+          printedDuplicates++;
+        }
         continue;
       }
 
-      db.collection('articles').add({
+    console.log(`Adding new article: ${item.title}`);
+
+      await db.collection('articles').add({
         title: item.title,
         link: item.link,
         published: item.pubDate ? item.pubDate : new Date(),
         content: item.description || '',
         imgUrl: imageUrl,
-        category: category  
-      }).then(docRef => {
-        console.log('Document written with ID: ', docRef.id);
-      }).catch(error => {
-        console.error('Error adding document: ', error);
+        category: category
       });
+
+      newArticlesCount++;
     }
   });
+
+  return { newArticles: newArticlesCount, duplicates: duplicateCount };
 };
 
-
-// set cron expression to once an hour
-cron.schedule('0 */2 * * *', () => {
+// Set cron expression to once every 2 hours
+cron.schedule('*/3 * * * *', () => {
   console.log('Fetching and storing feeds...');
   fetchAndStoreFeeds();
 });

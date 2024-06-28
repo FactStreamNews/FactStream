@@ -21,9 +21,13 @@ const NewsPage = () => {
         const articlesWithFormattedDates = response.data.map(article => ({
           ...article,
           published: article.published && article.published._seconds 
-          ? new Date(article.published._seconds * 1000).toLocaleString() 
-          : 'Unknown'
+            ? new Date(article.published._seconds * 1000)
+            : 'Unknown'
         }));
+
+        // sort articles by date
+       // const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
+
         setArticles(articlesWithFormattedDates);
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -133,7 +137,7 @@ const NewsPage = () => {
             </Link>
           </div>
           <div className="article-meta">
-            <span>Published on: {article.published}</span>
+            <span>Published on: {article.published.toLocaleString()}</span>
             <span>Likes: {article.likes || 0}</span>
           </div>
           <Link 
