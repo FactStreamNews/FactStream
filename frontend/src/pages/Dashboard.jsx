@@ -130,10 +130,10 @@ function Dashboard() {
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Enter new name"
             />
-            <button onClick={handleNameUpdate}>Save</button>
+            <button className="dashboard__btn2" onClick={handleNameUpdate}>Save</button>
           </div>
         ) : (
-          <button onClick={handleNameEdit}>Edit Name</button>
+          <button className="dashboard__btn2" onClick={handleNameEdit}>Edit Name</button>
         )}
         <div>
           <input
@@ -142,7 +142,7 @@ function Dashboard() {
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter new password"
           />
-          <button onClick={handleUpdatePassword} disabled={updating}>
+          <button className="dashboard__btn2" onClick={handleUpdatePassword} disabled={updating}>
             {updating ? "Updating..." : "Update Password"}
           </button>
         </div>
@@ -155,6 +155,11 @@ function Dashboard() {
       <button className="dashboard__btn" onClick={handleDeleteUser}>
         Delete Account
       </button>
+      <div>
+      <button className="dashboard__btn">
+        Set Preferences
+      </button>
+      </div>
     </div>
   );
 }
