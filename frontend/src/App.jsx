@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Reset from "./components/Reset";
-import SignIn from './pages/SignIn';
 import PageLayout from './contexts/PageLayout';
 import NewsPage from './pages/NewsPage';
 import ArticlePage from './pages/ArticlePage';
@@ -19,11 +18,12 @@ const App = () => {
   const routes = [
     { path: '/', component: NewsPage },
     {path: '/article/:id', component: ArticlePage},
-    { path: '/signin', component: SignIn },
+    { path: '/signin', component: Login },
     {path: '/home', component: Home}, 
     {path: '/dashboard', component: Dashboard},
     {path: '/register', component: Register},
-    {path: '/savedArticles', component: SavedArticles}
+    {path: '/savedArticles', component: SavedArticles}, 
+    {path: '/reset', component: Reset}
 ];
  
 return (
