@@ -6,6 +6,7 @@ import { auth, db, logout } from "../firebase";
 import { updateEmail, updatePassword, deleteUser } from "firebase/auth";
 import { query, collection, getDocs, where, updateDoc } from "firebase/firestore";
 import { doc, deleteDoc } from "firebase/firestore";
+import PreferencesModal from "../components/PreferencesModal";
 
 function Dashboard() {
   const [user, loading, error] = useAuthState(auth);
@@ -17,6 +18,8 @@ function Dashboard() {
   const [newPassword, setNewPassword] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
+
 
 
   const fetchUserName = async () => {
@@ -116,6 +119,18 @@ function Dashboard() {
     }
   };
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSavePreferences = (selectedCategories) => {
+    console.log('Selected categories:', selectedCategories);
+    // Save the selected categories to the user's profile in firebase
+  };
 
   return (
     <div>
@@ -156,10 +171,15 @@ function Dashboard() {
         Delete Account
       </button>
       <div>
-      <button className="dashboard__btn">
+      <button className="dashboard__btn" onClick={handleOpenModal}>
         Set Preferences
       </button>
       </div>
+      <PreferencesModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSavePreferences}
+      />
     </div>
   );
 }
