@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
 import './PreferencesModal.css'; // Ensure this file exists for custom styles
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../firebase';
+import { doc, updateDoc, getDocs, query, collection, where } from 'firebase/firestore';
+import { db } from '../config/firebase.js';
 
 const categories = ["Tech", "Politics", "Science", "Health", "Sports", "Travel"]; // Your preset categories
+
 
 Modal.setAppElement('#root'); // Set this to the root element of your React app
 
 const PreferencesModal = ({ isOpen, onClose, onSave }) => {
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [user, loading, error] = useAuthState(auth);
 
   const handleCategoryChange = (category) => {
     setSelectedCategories(prev =>
@@ -17,9 +23,74 @@ const PreferencesModal = ({ isOpen, onClose, onSave }) => {
     );
   };
 
-  const handleSave = () => {
-    onSave(selectedCategories);
-    onClose();
+  const handleSave = async() => {
+    try {
+      onSave(selectedCategories);
+      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+      const doc1 = await getDocs(q);
+      const docId = doc1.docs[0].id;
+      const userDocRef = doc(db, "users", docId);
+
+      //Check which topics array includes
+      if (selectedCategories.includes("Tech")){
+        await updateDoc(userDocRef, {
+          techPreference: true,
+        });
+      } else {
+        await updateDoc(userDocRef, {
+          techPreference: false,
+        });
+      }
+      if (selectedCategories.includes("Politics")){
+        await updateDoc(userDocRef, {
+          politicsPreference: true,
+        });
+      } else {
+        await updateDoc(userDocRef, {
+          politicsPreference: false,
+        });
+      }
+      if (selectedCategories.includes("Science")){
+        await updateDoc(userDocRef, {
+          sciencePreference: true,
+        });
+      } else {
+        await updateDoc(userDocRef, {
+          sciencePreference: false,
+        });
+      }
+      if (selectedCategories.includes("Health")){
+        await updateDoc(userDocRef, {
+          healthPreference: true,
+        });
+      } else {
+        await updateDoc(userDocRef, {
+          healthPreference: false,
+        });
+      }
+      if (selectedCategories.includes("Sports")){
+        await updateDoc(userDocRef, {
+          sportsPreference: true,
+        });
+      } else {
+        await updateDoc(userDocRef, {
+          sportsPreference: false,
+        });
+      }
+      if (selectedCategories.includes("Travel")){
+        await updateDoc(userDocRef, {
+          travelPreference: true,
+        });
+      } else {
+        await updateDoc(userDocRef, {
+          travelPreference: false,
+        });
+      }
+     
+      onClose();
+  } catch (error){
+    console.log(error);
+  }
   };
 
   return (
