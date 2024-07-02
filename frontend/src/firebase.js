@@ -72,6 +72,12 @@ const registerWithEmailAndPassword = async (name, email, password) => {
         authProvider: "local",
         email,
         savedArticles: [],
+        techPreference: false,
+        politicsPreference: false,
+        sciencePreference: false,
+        healthPreference: false,
+        sportsPreference: false,
+        travelPreference: false
       });
     } catch (err) {
       console.error(err);
