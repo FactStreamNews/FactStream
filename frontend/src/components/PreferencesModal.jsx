@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import './PreferencesModal.css'; // Ensure this file exists for custom styles
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';
-import { doc, updateDoc, getDocs, query, collection, where } from 'firebase/firestore';
+import { doc, updateDoc, getDocs, query, collection, where, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase.js';
 
 const categories = ["Tech", "Politics", "Science", "Health", "Sports", "Travel"]; // Your preset categories
@@ -14,6 +14,44 @@ Modal.setAppElement('#root'); // Set this to the root element of your React app
 const PreferencesModal = ({ isOpen, onClose, onSave }) => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [user, loading, error] = useAuthState(auth);
+
+  useEffect(() => {
+    const fetchUserPreferences = async () => {
+      try {
+        if (user) {
+          const q = query(collection(db, "users"), where("uid", "==", user.uid));
+          const doc = await getDocs(q);
+          const data = doc.docs[0].data();
+          const newpreferences = [];
+          if(data.sciencePreference == true){
+            newpreferences.push("Science");
+          } 
+          if (data.politicsPreference == true){
+            newpreferences.push("Politics");
+          }
+          if (data.healthPreference == true){
+            newpreferences.push("Health");
+          }
+          if (data.techPreference == true) {
+            newpreferences.push("Tech");
+          }
+          if (data.sportsPreference == true) {
+            newpreferences.push("Sports");
+          }
+          if (data.travelPreference == true) {
+            newpreferences.push("Travel");
+          }
+          setSelectedCategories(newpreferences);
+        }
+      } catch (error) {
+        console.error("Error fetching user preferences:", error);
+      }
+    };
+
+    if (isOpen) {
+      fetchUserPreferences();
+    }
+  }, [isOpen, user]);
 
   const handleCategoryChange = (category) => {
     setSelectedCategories(prev =>
