@@ -66,11 +66,14 @@ const registerWithEmailAndPassword = async (name, email, password) => {
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
       const user = res.user;
+      var is_admin = false;
+      if (email == "root@root.net") is_admin = true;
       await addDoc(collection(db, "users"), {
         uid: user.uid,
         name,
         authProvider: "local",
         email,
+        is_admin,
         savedArticles: [],
         techPreference: false,
         politicsPreference: false,

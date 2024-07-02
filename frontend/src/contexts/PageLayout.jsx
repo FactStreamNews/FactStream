@@ -6,10 +6,36 @@ import Container from '@mui/material/Container';
 import { Link } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from '../firebase'; // Ensure you have your firebase setup
+import { auth, db } from '../firebase'; 
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+
+
 
 const Navbar = () => {
   const [user, loading, error] = useAuthState(auth);
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    const fetchAdminStatus = async () => {
+      if (user) {
+        console.log(`Fetching admin status for user: ${user.uid}`);
+        
+        // Query to find the document with the uid field
+        const q = query(collection(db, 'users'), where('uid', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          console.log(`User data: ${JSON.stringify(userDoc.data())}`);
+          setIsAdmin(userDoc.data().is_admin || false);
+        } else {
+          console.log('No such document!');
+        }
+      }
+    };
+
+    fetchAdminStatus();
+  }, [user]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -26,8 +52,13 @@ const Navbar = () => {
           <Button component={Link} to="/" color="inherit">FactStream</Button>
         </Typography>
         <div>
+        {user && (
+            <Button component={Link} to="/admin" color="inherit"> {isAdmin && "ADMIN"}</Button>
+          
+          )}
           {user && (
             <Button component={Link} to="/savedArticles" color="inherit">Saved Articles</Button>
+          
           )}
         {user ? (
           <Button component={Link} to="/dashboard" color="inherit">Profile</Button>
