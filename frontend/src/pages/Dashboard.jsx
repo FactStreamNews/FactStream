@@ -126,10 +126,12 @@ function Dashboard() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    window.location.reload();
   };
 
   const handleSavePreferences = (selectedCategories) => {
     console.log('Selected categories:', selectedCategories);
+    //window.location.reload();
     // Save the selected categories to the user's profile in firebase
   };
 
