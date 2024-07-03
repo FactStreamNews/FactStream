@@ -18,18 +18,19 @@ const NewsPage = () => {
     const fetchArticles = async () => {
       try {
         const response = await axios.get('/articles');
-        console.log(response);
         const articlesWithFormattedDates = response.data.map(article => ({
           ...article,
           published: article.published && article.published._seconds 
             ? new Date(article.published._seconds * 1000)
             : 'Unknown'
         }));
+        const travelArticles = articlesWithFormattedDates.filter(articlesWithFormattedDates => articlesWithFormattedDates.category === "travel");
+        console.log(travelArticles);
 
         // sort articles by date
        // const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
-        setArticles(articlesWithFormattedDates);
+        setArticles(travelArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
       }
@@ -125,7 +126,7 @@ const NewsPage = () => {
 
   return (
     <div className="article-list">
-      <h1>News Articles</h1>
+      <h1>Travel</h1>
       {articles.map((article, index) => (
         <div key={index} className="article-item">
           <h2>

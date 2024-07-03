@@ -7,6 +7,12 @@ import Reset from "./components/Reset";
 import PageLayout from './contexts/PageLayout';
 import NewsPage from './pages/NewsPage';
 import ArticlePage from './pages/ArticlePage';
+import TechPage from './pages/TechPage';
+import PoliticsPage from './pages/PoliticsPage';
+import SportsPage from './pages/SportsPage';
+import SciencePage from './pages/SciencePage';
+import HealthPage from './pages/HealthPage';
+import TravelPage from './pages/TravelPage';
 
 import {AuthProvider} from './contexts/AuthProvider';
 import Home from './pages/Home';
@@ -23,7 +29,13 @@ const App = () => {
     {path: '/dashboard', component: Dashboard},
     {path: '/register', component: Register},
     {path: '/savedArticles', component: SavedArticles}, 
-    {path: '/reset', component: Reset}
+    {path: '/reset', component: Reset}, 
+    {path: '/tech', component: TechPage},
+    {path: '/politics', component: PoliticsPage},
+    {path: '/sports', component: SportsPage},
+    {path: '/science', component: SciencePage},
+    {path: '/health', component: HealthPage}, 
+    {path: '/travel', component: TravelPage},
 ];
  
 return (
