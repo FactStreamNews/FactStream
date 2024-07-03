@@ -19,8 +19,7 @@ function Dashboard() {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
-
-
+  const [isPublic, setIsPublic] = useState(true); // State to manage profile visibility
 
   const fetchUserName = async () => {
     try {
@@ -33,7 +32,12 @@ function Dashboard() {
       alert("An error occured while fetching user data");
     }
   };
+
   useEffect(() => {
+    const savedIsPublic = localStorage.getItem("isPublic");
+    if (savedIsPublic !== null) {
+      setIsPublic(JSON.parse(savedIsPublic));
+    }
     if (loading) return;
     if (!user) return navigate("/");
     fetchUserName();
@@ -68,10 +72,7 @@ function Dashboard() {
       await updatePassword(auth.currentUser, newPassword);
       alert("Password updated successfully");
       setNewPassword("");
-    } //catch (err) {
-    //console.error(err);
-    // alert("An error occurred while updating the password");
-    finally {
+    } finally {
       setUpdating(false);
     }
   };
@@ -132,6 +133,12 @@ function Dashboard() {
     // Save the selected categories to the user's profile in firebase
   };
 
+  const togglePrivacy = () => {
+    const newIsPublic = !isPublic;
+    setIsPublic(newIsPublic);
+    localStorage.setItem("isPublic", JSON.stringify(newIsPublic));
+  };
+
   return (
     <div>
       <h1>Welcome {name}</h1>
@@ -171,9 +178,14 @@ function Dashboard() {
         Delete Account
       </button>
       <div>
-      <button className="dashboard__btn" onClick={handleOpenModal}>
-        Set Preferences
-      </button>
+        <button className="dashboard__btn" onClick={handleOpenModal}>
+          Set Preferences
+        </button>
+        <h2>Profile Settings</h2>
+        <p>Your profile is {isPublic ? 'public' : 'private'}.</p>
+        <button onClick={togglePrivacy}>
+          {isPublic ? 'Make Private' : 'Make Public'}
+        </button>
       </div>
       <PreferencesModal
         isOpen={isModalOpen}
