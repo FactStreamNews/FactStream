@@ -13,6 +13,7 @@ import SportsPage from './pages/SportsPage';
 import SciencePage from './pages/SciencePage';
 import HealthPage from './pages/HealthPage';
 import TravelPage from './pages/TravelPage';
+import AdminUserList from './pages/AdminUserList';
 
 import {AuthProvider} from './contexts/AuthProvider';
 import Home from './pages/Home';
@@ -36,6 +37,7 @@ const App = () => {
     {path: '/science', component: SciencePage},
     {path: '/health', component: HealthPage}, 
     {path: '/travel', component: TravelPage},
+    {path: 'admin', component: AdminUserList}
 ];
  
 return (
