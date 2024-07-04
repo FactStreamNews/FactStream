@@ -1,38 +1,52 @@
-.admin-user-list {
-    margin: 20px;
+/* src/pages/AdminUserList.css */
+.admin-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
   }
   
-  .admin-user-list h1 {
-    text-align: center;
-    margin-bottom: 20px;
+  .admin-user-list,
+  .admin-deleted-articles {
+    width: 48%;
   }
   
-  .admin-user-list table {
+  .admin-user-list table,
+  .admin-deleted-articles table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
   }
   
-  .admin-user-list th, .admin-user-list td {
+  .admin-user-list th,
+  .admin-user-list td,
+  .admin-deleted-articles th,
+  .admin-deleted-articles td {
     border: 1px solid #ddd;
     padding: 8px;
+  }
+  
+  .admin-user-list th,
+  .admin-deleted-articles th {
+    background-color: #f2f2f2;
     text-align: left;
   }
   
-  .admin-user-list th {
-    background-color: #f4f4f4;
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
   }
   
-  .delete-button {
-    background-color: #ff4f00;
+  .pagination-button {
+    background-color: #007bff;
     color: white;
     border: none;
-    padding: 5px 10px;
+    padding: 10px 15px;
+    margin: 0 5px;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 5px;
   }
   
-  .delete-button:hover {
-    background-color: #e04e00;
+  .pagination-button:hover {
+    background-color: #0056b3;
   }
   
