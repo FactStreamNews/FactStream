@@ -20,6 +20,26 @@ function Dashboard() {
   const [newName, setNewName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    const fetchAdminStatus = async () => {
+      if (user) {
+        console.log(`Fetching admin status for user: ${user.uid}`);
+        
+        const q = query(collection(db, 'users'), where('uid', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          console.log(`True`);
+          setIsAdmin(userDoc.data().is_admin || false);
+        } else {
+          console.log('No such document!');
+        }
+      }
+    };
+    fetchAdminStatus();
+  }, [user]);
 
 
   const fetchUserName = async () => {
