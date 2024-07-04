@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
-import { updateDoc, doc, arrayUnion, arrayRemove, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove,addDoc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const NewsPage = () => {
@@ -14,6 +14,8 @@ const NewsPage = () => {
   const [user, loading, error] = useAuthState(auth);
   const [isSaved, setIsSaved] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false); 
+  const [articleToDelete, setArticleToDelete] = useState(null);
 
 
   useEffect(() => {
@@ -85,16 +87,37 @@ const NewsPage = () => {
     }
   }, [user]);
 
+
+   const handleDeleteClick = (article) => {
+    setArticleToDelete(article);
+    setShowConfirm(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowConfirm(false);
+    setArticleToDelete(null);
+  };
+
   // delete article for admin use
-  const handleDelete = async (articleId) => {
-    try {
-      await deleteDoc(doc(db, 'articles', articleId));
-      setArticles(articles.filter(article => article.id !== articleId));
-      console.log('Article deleted successfully');
-    } catch (error) {
-      console.error('Error deleting article:', error);
+  const handleConfirmDelete = async () => {
+    if (articleToDelete) {
+      try {
+        // Add the article to deleted_articles collection
+        await addDoc(collection(db, 'deleted_articles'), articleToDelete);
+        
+        // Delete the article from articles collection
+        await deleteDoc(doc(db, 'articles', articleToDelete.id));
+        setArticles(articles.filter(article => article.id !== articleToDelete.id));
+        console.log('Article deleted successfully');
+      } catch (error) {
+        console.error('Error deleting article:', error);
+      } finally {
+        setShowConfirm(false);
+        setArticleToDelete(null);
+      }
     }
   };
+
   
  /* const toggleSave = (index) => {
 
@@ -169,9 +192,9 @@ const NewsPage = () => {
       {articles.map((article, index) => (
         <div key={index} className="article-item">
          {user && isAdmin && (
-            <button onClick={() => handleDelete(article.id)} color="inherit">
-              Delete
-            </button>
+               <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+               Delete
+             </button>
           )}         <h2>
             <Link to={`/article/${article.id}`}>{article.title}</Link>
           </h2>
@@ -193,6 +216,13 @@ const NewsPage = () => {
           </Link>
         </div>
       ))}
+      {showConfirm && (
+        <div className="confirmation-dialog">
+          <p>Are you sure you want to delete this article?</p>
+          <button onClick={handleConfirmDelete} className="confirm-button">Yes</button>
+          <button onClick={handleCancelDelete} className="cancel-button">No</button>
+        </div>
+      )}
     </div>
   );
 };
