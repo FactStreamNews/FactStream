@@ -8,13 +8,16 @@ import { updateDoc, doc, arrayUnion, arrayRemove, getDoc, query, collection, whe
 import { db } from '../firebase';
 
 const NewsPage = () => {
+  
   const [articles, setArticles] = useState([]);
   const [savedArticles, setSavedArticles] = useState([]);
   const [user, loading, error] = useAuthState(auth);
   const [isSaved, setIsSaved] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
 
   useEffect(() => {
+    
     const fetchArticles = async () => {
       try {
         const response = await axios.get('/articles');
@@ -26,6 +29,7 @@ const NewsPage = () => {
             : 'Unknown'
         }));
 
+      
         // sort articles by date
        // const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
@@ -34,9 +38,33 @@ const NewsPage = () => {
         console.error('Error fetching articles:', error);
       }
     };
+    const fetchAdminStatus = async () => {
+      if (user) {
+        console.log(`Fetching admin status for user: ${user.uid}`);
+        
+        // Query to find the document with the uid field
+        const q = query(collection(db, 'users'), where('uid', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        const doc1 = await getDocs(q);
+        const data = doc1.docs[0].data();
+        const docID = doc1.docs[0].id;
+        const docRef = doc(db, "users", docID);
+
+    
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          console.log(`User data: ${JSON.stringify(userDoc.data())}`);
+          setIsAdmin(userDoc.data().is_admin || false);
+        } else {
+          console.log('No such document!');
+        }
+      }
+    };
+
+    fetchAdminStatus();
 
     fetchArticles();
-  }, []);
+  }, [user, loading]);
 
   useEffect(() => {
     if (user) {
@@ -128,7 +156,10 @@ const NewsPage = () => {
       <h1>News Articles</h1>
       {articles.map((article, index) => (
         <div key={index} className="article-item">
-          <h2>
+        {user && (
+            <button component={Link} to="/admin" color="inherit"> {isAdmin && "Delete"}</button>
+          
+          )}          <h2>
             <Link to={`/article/${article.id}`}>{article.title}</Link>
           </h2>
           <h3>{article.category}</h3>
