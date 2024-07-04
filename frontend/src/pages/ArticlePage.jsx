@@ -15,6 +15,8 @@ const ArticlePage = () => {
   const [hasLiked, setHasLiked] = useState(false); // State to track if the user has liked the article
   const [hasSaved, setHasSaved] = useState(false); // State to track if the user saved the article
   const [savedArticles, setSavedArticles] = useState([]);
+  const [comments, setComments] = useState([]); // list of existing comments 
+  const [newComment, setNewComment] = useState(''); // new comment
   const [user, loading, error] = useAuthState(auth);
 
   // Fetch article data
@@ -37,6 +39,48 @@ const ArticlePage = () => {
 
     fetchArticle();
   }, [id]);
+
+  // Fetch comments data
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const commentsRef = collection(db, 'articles', id, 'comments');
+        const commentsSnap = await getDocs(commentsRef);
+        const commentsList = commentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setComments(commentsList);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    };
+
+    fetchComments();
+  }, [id]);
+
+  // Handle addition of comments
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert('Please sign in to comment.');
+      return;
+    }
+
+    try {
+      const commentsRef = collection(db, 'articles', id, 'comments');
+      await addDoc(commentsRef, {
+        userId: user.uid,
+        userName: user.displayName,
+        text: newComment,
+        createdAt: new Date(),
+      });
+      setNewComment('');
+      // Fetch comments again to update the list
+      const commentsSnap = await getDocs(commentsRef);
+      const commentsList = commentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setComments(commentsList);
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
 
    // check if user liked article
    useEffect(() => {
@@ -190,6 +234,23 @@ const ArticlePage = () => {
         <div
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
+        <div className="comments-section">
+          <h2>Comments</h2>
+          {comments.map((comment) => (
+            <div key={comment.id} className="comment">
+              <p><strong>{comment.userName}</strong> ({new Date(comment.createdAt.toDate()).toLocaleString()}): {comment.text}</p>
+            </div>
+          ))}
+          <form onSubmit={handleAddComment}>
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment"
+              required
+            />
+            <button type="submit">Submit</button>
+          </form>
+        </div>
        
       </div>
       <div className="related-articles">
