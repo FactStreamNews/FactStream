@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
-import { updateDoc, doc, arrayUnion, arrayRemove, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const NewsPage = () => {
@@ -28,6 +28,8 @@ const NewsPage = () => {
             ? new Date(article.published._seconds * 1000)
             : 'Unknown'
         }));
+
+
 
       
         // sort articles by date
@@ -83,6 +85,16 @@ const NewsPage = () => {
     }
   }, [user]);
 
+  // delete article for admin use
+  const handleDelete = async (articleId) => {
+    try {
+      await deleteDoc(doc(db, 'articles', articleId));
+      setArticles(articles.filter(article => article.id !== articleId));
+      console.log('Article deleted successfully');
+    } catch (error) {
+      console.error('Error deleting article:', error);
+    }
+  };
   
  /* const toggleSave = (index) => {
 
@@ -156,10 +168,11 @@ const NewsPage = () => {
       <h1>News Articles</h1>
       {articles.map((article, index) => (
         <div key={index} className="article-item">
-        {user && (
-            <button component={Link} to="/admin" color="inherit"> {isAdmin && "Delete"}</button>
-          
-          )}          <h2>
+         {user && isAdmin && (
+            <button onClick={() => handleDelete(article.id)} color="inherit">
+              Delete
+            </button>
+          )}         <h2>
             <Link to={`/article/${article.id}`}>{article.title}</Link>
           </h2>
           <h3>{article.category}</h3>
