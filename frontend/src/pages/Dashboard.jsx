@@ -11,6 +11,7 @@ import PreferencesModal from "../components/PreferencesModal";
 function Dashboard() {
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState("");
+  const [profilePicture, setProfilePicture] = useState(""); // New state for profile picture URL
   const navigate = useNavigate();
   const [isInputVisible, setInputVisible] = useState(false);
   const [email, setEmail] = useState(user?.email || "");
@@ -27,6 +28,7 @@ function Dashboard() {
       const doc = await getDocs(q);
       const data = doc.docs[0].data();
       setName(data.name);
+      setProfilePicture(data.profilePictureUrl); // Set profile picture URL
     } catch (err) {
       console.error(err);
       alert("An error occured while fetching user data");
@@ -141,10 +143,26 @@ function Dashboard() {
     localStorage.setItem("isPublic", JSON.stringify(newIsPublic));
   };
 
+  const handleProfilePictureUpload = async (event) => {
+    const file = event.target.files[0];
+    // Handle file upload (e.g., to Firebase Storage)
+    // Update profile picture URL in the database
+  };
+
+  const handleSaveProfile = () => {
+    // Save any other profile changes (e.g., name, bio) if needed
+    alert("Profile changes saved successfully!");
+  };
+  
   return (
     <div>
-      <h1>Welcome {name}</h1>
-      <div>
+     <h1>Welcome {name}</h1>
+      <p>Please upload a profile picture before the Choose File button.</p>
+      {profilePicture && <img src={profilePicture} alt="Profile" />}
+      <input type="file" onChange={handleProfilePictureUpload} />
+      <button className="dashboard__btn-small" onClick={handleSaveProfile}>Save</button>
+      {/* Other UI elements */}
+    <div>
         <label>Email: {user?.email}</label>
         {editingName ? (
           <div>
