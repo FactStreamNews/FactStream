@@ -2,10 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove, addDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../config/firebase.js';
+import { auth, db } from "../firebase";
 import './ArticlePage.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebase';
 
 const ArticlePage = () => {
   const { id } = useParams();
@@ -18,6 +17,19 @@ const ArticlePage = () => {
   const [comments, setComments] = useState([]); // list of existing comments 
   const [newComment, setNewComment] = useState(''); // new comment
   const [user, loading, error] = useAuthState(auth);
+  const [name, setName] = useState("");
+  
+  const fetchUserName = async () => {
+    try {
+      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+      const doc = await getDocs(q);
+      const data = doc.docs[0].data();
+      setName(data.name);
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while fetching user data");
+    }
+  };
 
   // Fetch article data
   useEffect(() => {
@@ -28,7 +40,7 @@ const ArticlePage = () => {
         if (articleSnap.exists()) {
           const articleData = articleSnap.data();
           setArticle(articleData);
-          setLikes(articleData.likes || 0); 
+          setLikes(articleData.likes || 0);
         } else {
           console.log('No such document!');
         }
@@ -36,7 +48,7 @@ const ArticlePage = () => {
         console.error('Error fetching article:', error);
       }
     };
-
+    fetchUserName();
     fetchArticle();
   }, [id]);
 
@@ -68,7 +80,7 @@ const ArticlePage = () => {
       const commentsRef = collection(db, 'articles', id, 'comments');
       await addDoc(commentsRef, {
         userId: user.uid,
-        userName: user.displayName,
+        userName: name, // Use fetched username
         text: newComment,
         createdAt: new Date(),
       });
@@ -82,8 +94,8 @@ const ArticlePage = () => {
     }
   };
 
-   // check if user liked article
-   useEffect(() => {
+  // Check if user liked the article
+  useEffect(() => {
     const checkIfUserLiked = async () => {
       if (user) {
         const likesRef = collection(db, 'likes');
@@ -95,7 +107,6 @@ const ArticlePage = () => {
 
     checkIfUserLiked();
   }, [user, id]);
-
 
   // Fetch related articles based on the category of the current article
   useEffect(() => {
@@ -178,17 +189,15 @@ const ArticlePage = () => {
       console.error('Error updating likes:', error);
     }
   };
+
   const toggleSave = async (index) => {
     if (!user) return;
 
     const articleId = id;
-    console.log("here");
-    console.log("articleID:", articleId);
     const q = query(collection(db, "users"), where("uid", "==", user?.uid));
     const doc1 = await getDocs(q);
     const docId = doc1.docs[0].id;
     const userDocRef = doc(db, "users", docId);
-    console.log("userDocRef", userDocRef);
 
     try {
       if (savedArticles.includes(articleId)) {
@@ -216,24 +225,23 @@ const ArticlePage = () => {
       <div className="article-content">
         <h1>{article.title}</h1>
         <img src={article.imgUrl} alt={article.title} className="article-image" />
-         <div className='button-container'>
+        <div className='button-container'>
           <button
-            className={`like-button ${hasLiked ? 'liked' : ''}`} 
+            className={`like-button ${hasLiked ? 'liked' : ''}`}
             onClick={handleLike}
           >
             {hasLiked ? 'Liked' : 'Like'} ({likes})
           </button>
           <button
-            className="save-button" 
+            className="save-button"
             onClick={toggleSave}
           >
             {hasSaved ? 'Unsave' : 'Save'}
           </button>
         </div>
-        
-        <div
-          dangerouslySetInnerHTML={{ __html: article.content }}
-        />
+
+        <div dangerouslySetInnerHTML={{ __html: article.content }} />
+
         <div className="comments-section">
           <h2>Comments</h2>
           {comments.map((comment) => (
@@ -251,8 +259,8 @@ const ArticlePage = () => {
             <button type="submit">Submit</button>
           </form>
         </div>
-       
       </div>
+      
       <div className="related-articles">
         <h2>Related Articles</h2>
         {relatedArticles.map((relatedArticle, index) => (

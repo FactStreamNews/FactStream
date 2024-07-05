@@ -10,7 +10,7 @@ import PreferencesModal from "../components/PreferencesModal";
 
 function Dashboard() {
   const [user, loading, error] = useAuthState(auth);
-  const [name, setName] = useState("");
+  
   const navigate = useNavigate();
   const [isInputVisible, setInputVisible] = useState(false);
   const [email, setEmail] = useState(user?.email || "");
@@ -20,7 +20,7 @@ function Dashboard() {
   const [newName, setNewName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
   const [isPublic, setIsPublic] = useState(true); // State to manage profile visibility
-
+  const [name, setName] = useState("");
   const fetchUserName = async () => {
     try {
       const q = query(collection(db, "users"), where("uid", "==", user?.uid));
