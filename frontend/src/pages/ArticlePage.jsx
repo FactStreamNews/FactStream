@@ -1,4 +1,3 @@
-// src/components/ArticlePage.jsx
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove, addDoc, deleteDoc } from 'firebase/firestore';
@@ -10,26 +9,14 @@ const ArticlePage = () => {
   const { id } = useParams();
   const [article, setArticle] = useState(null);
   const [relatedArticles, setRelatedArticles] = useState([]);
-  const [likes, setLikes] = useState(0); // State to store the likes count
-  const [hasLiked, setHasLiked] = useState(false); // State to track if the user has liked the article
-  const [hasSaved, setHasSaved] = useState(false); // State to track if the user saved the article
+  const [likes, setLikes] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
   const [savedArticles, setSavedArticles] = useState([]);
-  const [comments, setComments] = useState([]); // list of existing comments 
-  const [newComment, setNewComment] = useState(''); // new comment
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
   const [user, loading, error] = useAuthState(auth);
-  const [name, setName] = useState("");
-  
-  const fetchUserName = async () => {
-    try {
-      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
-      const doc = await getDocs(q);
-      const data = doc.docs[0].data();
-      setName(data.name);
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred while fetching user data");
-    }
-  };
+  const [username, setUsername] = useState('');
 
   // Fetch article data
   useEffect(() => {
@@ -48,7 +35,6 @@ const ArticlePage = () => {
         console.error('Error fetching article:', error);
       }
     };
-    fetchUserName();
     fetchArticle();
   }, [id]);
 
@@ -68,6 +54,22 @@ const ArticlePage = () => {
     fetchComments();
   }, [id]);
 
+  // Fetch user's profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const q = query(collection(db, "users"), where("uid", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data();
+          setUsername(userData.name);  // Assume 'name' is the field storing the username
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
   // Handle addition of comments
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -80,7 +82,7 @@ const ArticlePage = () => {
       const commentsRef = collection(db, 'articles', id, 'comments');
       await addDoc(commentsRef, {
         userId: user.uid,
-        userName: name, // Use fetched username
+        userName: username,  // Use the state variable for the username
         text: newComment,
         createdAt: new Date(),
       });
@@ -133,6 +135,7 @@ const ArticlePage = () => {
     }
   }, [article, id]);
 
+  // Check if the user has saved the article
   useEffect(() => {
     const checkIfSaved = async () => {
       if (user) {
