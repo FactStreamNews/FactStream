@@ -35,9 +35,9 @@ const NewsPage = () => {
 
       
         // sort articles by date
-       // const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
+       const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
-        setArticles(articlesWithFormattedDates);
+        setArticles(sortedArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
       }
