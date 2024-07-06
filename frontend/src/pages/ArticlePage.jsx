@@ -18,9 +18,25 @@ const ArticlePage = () => {
   const [comments, setComments] = useState([]); // list of existing comments 
   const [newComment, setNewComment] = useState(''); // new comment
   const [user, loading, error] = useAuthState(auth);
+  const [name, setName] = useState("");
+
+
+  const fetchUserName = async () => {
+    try {
+      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+      const doc = await getDocs(q);
+      const data = doc.docs[0].data();
+      setName(data.name);
+      
+    } catch (err) {
+      console.error(err);
+      alert("An error occured while fetching user data");
+    }
+  };
 
   // Fetch article data
   useEffect(() => {
+    fetchUserName(); // test
     const fetchArticle = async () => {
       try {
         const articleRef = doc(db, 'articles', id);
@@ -64,11 +80,13 @@ const ArticlePage = () => {
       return;
     }
 
+
+
     try {
       const commentsRef = collection(db, 'articles', id, 'comments');
       await addDoc(commentsRef, {
         userId: user.uid,
-        userName: user.displayName,
+        userName: name, // user.displayName
         text: newComment,
         createdAt: new Date(),
       });
