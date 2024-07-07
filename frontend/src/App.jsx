@@ -37,7 +37,8 @@ const App = () => {
     {path: '/science', component: SciencePage},
     {path: '/health', component: HealthPage}, 
     {path: '/travel', component: TravelPage},
-    {path: 'admin', component: AdminUserList}
+    {path: 'admin', component: AdminUserList},
+    { path: '/profile/:userId', component: Dashboard }  // Add this line
 ];
  
 return (

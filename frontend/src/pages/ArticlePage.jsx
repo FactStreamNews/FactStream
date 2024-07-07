@@ -252,7 +252,7 @@ const ArticlePage = () => {
         <div
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
-        <div className="comments-section">
+        {/* <div className="comments-section">
           <h2>Comments</h2>
           {comments.map((comment) => (
             <div key={comment.id} className="comment">
@@ -268,7 +268,30 @@ const ArticlePage = () => {
             />
             <button type="submit">Submit</button>
           </form>
-        </div>
+        </div> */}
+
+<div className="comments-section">
+  <h2>Comments</h2>
+  {comments.map((comment) => (
+    <div key={comment.id} className="comment">
+      <p>
+        <strong>
+          <Link to={`/profile/${comment.userId}`}>{comment.userName}</Link>
+        </strong> 
+        ({new Date(comment.createdAt.toDate()).toLocaleString()}): {comment.text}
+      </p>
+    </div>
+  ))}
+  <form onSubmit={handleAddComment}>
+    <textarea
+      value={newComment}
+      onChange={(e) => setNewComment(e.target.value)}
+      placeholder="Add a comment"
+      required
+    />
+    <button type="submit">Submit</button>
+  </form>
+</div>
        
       </div>
       <div className="related-articles">
