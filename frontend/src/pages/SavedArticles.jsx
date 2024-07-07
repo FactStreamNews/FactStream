@@ -32,11 +32,6 @@ const SavedArticlesPage = () => {
         fetchSavedArticles();
       }
     }, [user]);
-
-    useEffect(() => {
-        console.log(savedArticles);
-    }, [savedArticles]);
-
   
     const [articles, setArticles] = useState([]);
   
@@ -44,28 +39,38 @@ const SavedArticlesPage = () => {
       const fetchArticles = async () => {
         try {
           const response = await axios.get('/articles');
-          const fetchArticles = response.data;
-          console.log(fetchArticles);
-          setArticles(response.data);
+          const articlesWithFormattedDates = response.data.map(article => ({
+            ...article,
+            published: article.published && article.published._seconds 
+              ? new Date(article.published._seconds * 1000)
+              : 'Unknown'
+          }));
+          const newSaved = articlesWithFormattedDates.filter(articlesWithFormattedDates => savedArticles.includes(articlesWithFormattedDates.id));
+          console.log(articlesWithFormattedDates);
+          console.log(newSaved);
+          //console.log(fetchArticles);
+          setArticles(newSaved);
         } catch (error) {
           console.error('Error fetching articles:', error);
         }
       };
+
   
       fetchArticles();
-    }, []);
+    }, [savedArticles]);
   
     return (
       <div className="article-list">
         <h1>Saved Articles</h1>
         {articles.map((article, index) => (
           <div key={index} className="article-item">
-            {savedArticles.includes(article.id) && (
+            {(
               <>
                 <h2>{article.title}</h2>
                 <h3>{article.category}</h3>
                 <img src={article.imgUrl} alt={article.title}></img>
                 <div className="article-meta">
+                <span>Published on: {article.published.toLocaleString()}</span>
                   <span>Likes: {article.likes || 0}</span>
                   <Link 
                     to={`/article/${article.id}`}
