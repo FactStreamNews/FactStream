@@ -158,10 +158,25 @@ function Dashboard() {
     // Save the selected categories to the user's profile in firebase
   };
 
-  const togglePrivacy = () => {
+  const togglePrivacy = async () => {
     const newIsPublic = !isPublic;
+    console.log(newIsPublic);
     setIsPublic(newIsPublic);
     localStorage.setItem("isPublic", JSON.stringify(newIsPublic));
+    try {
+    const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+    const doc1 = await getDocs(q);
+    const data = doc1.docs[0].id;
+    const userDocRef = doc(db, "users", data);
+    await updateDoc(userDocRef, {
+      is_private: !newIsPublic
+    });
+    alert(`Profile is now ${newIsPublic ? "public" : "private"}`);
+  } catch (err){
+    console.error(err);
+    alert(`An error occurred while updating privacy settings: ${err.message}`);
+  }
+    
   };
 
   const handleProfilePictureUpload = async (event) => {

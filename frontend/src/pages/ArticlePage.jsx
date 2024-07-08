@@ -84,11 +84,16 @@ const ArticlePage = () => {
 
     try {
       const commentsRef = collection(db, 'articles', id, 'comments');
+      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+      const doc = await getDocs(q);
+      const data = doc.docs[0].data();
+      console.log(data.is_private);
       await addDoc(commentsRef, {
         userId: user.uid,
         userName: name, // user.displayName
         text: newComment,
         createdAt: new Date(),
+        isPrivate: data.is_private
       });
       setNewComment('');
       // Fetch comments again to update the list
@@ -276,7 +281,7 @@ const ArticlePage = () => {
     <div key={comment.id} className="comment">
       <p>
         <strong>
-          <Link to={`/profile/${comment.userId}`}>{comment.userName}</Link>
+          {comment.isPrivate ? 'Anonymous' : <Link to={`/profile/${comment.userId}`}>{comment.userName}</Link>}
         </strong> 
         ({new Date(comment.createdAt.toDate()).toLocaleString()}): {comment.text}
       </p>
