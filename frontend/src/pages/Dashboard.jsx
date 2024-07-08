@@ -21,14 +21,35 @@ function Dashboard() {
   const [newName, setNewName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
   const [isPublic, setIsPublic] = useState(true); // State to manage profile visibility
+  const [preferences, setPreferences] = useState([]);
 
   const fetchUserName = async () => {
     try {
       const q = query(collection(db, "users"), where("uid", "==", user?.uid));
       const doc = await getDocs(q);
       const data = doc.docs[0].data();
+      const newPreferences = [];
+      if(data.sciencePreference == true){
+        newPreferences.push("Science");
+      } 
+      if (data.politicsPreference == true){
+        newPreferences.push("Politics");
+      }
+      if (data.healthPreference == true){
+        newPreferences.push("Health");
+      }
+      if (data.techPreference == true) {
+        newPreferences.push("Tech");
+      }
+      if (data.sportsPreference == true) {
+        newPreferences.push("Sports");
+      }
+      if (data.travelPreference == true) {
+        newPreferences.push("Travel");
+      }
       setName(data.name);
       setProfilePicture(data.profilePictureUrl); // Set profile picture URL
+      setPreferences(newPreferences);
     } catch (err) {
       console.error(err);
       alert("An error occured while fetching user data");
@@ -156,13 +177,13 @@ function Dashboard() {
   
   return (
     <div>
-     <h1>Welcome {name}</h1>
+      <h1>Welcome {name}</h1>
       <p>Please upload a profile picture before the Choose File button.</p>
       {profilePicture && <img src={profilePicture} alt="Profile" />}
       <input type="file" onChange={handleProfilePictureUpload} />
       <button className="dashboard__btn-small" onClick={handleSaveProfile}>Save</button>
       {/* Other UI elements */}
-    <div>
+      <div>
         <label>Email: {user?.email}</label>
         {editingName ? (
           <div>
@@ -212,6 +233,18 @@ function Dashboard() {
         onClose={handleCloseModal}
         onSave={handleSavePreferences}
       />
+      <div>
+        <h2>Your Preferences</h2>
+        {preferences.length > 0 ? (
+          <ul>
+            {preferences.map((preference, index) => (
+              <li key={index}>{preference}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>You have not set any preferences yet.</p>
+        )}
+      </div>
     </div>
   );
 }
