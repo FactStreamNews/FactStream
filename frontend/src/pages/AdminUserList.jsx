@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from '../firebase';
+import { deleteUser } from 'firebase/auth';
 import './AdminUserList.css';
 
 const AdminUserList = () => {
@@ -38,6 +39,27 @@ const AdminUserList = () => {
     fetchAdminStatus();
   }, [user]);
 
+  const handleDelete = async (user) => {
+    if (window.confirm("Are you sure you want to delete this account? This action cannot be undone.")) {
+    try {
+      const q = query(collection(db, "users"), where("uid", "==", user.uid));
+      const doc1 = await getDocs(q);
+      console.log(doc1);
+      const docId = doc1.docs[0].id;
+      const userDocRef = doc(db, "users", docId);
+      await deleteDoc(userDocRef); // Delete user data from Firestore
+   //   await deleteUser(auth.user); // Delete user from Firebase Authentication
+      setUsers(prevUsers => prevUsers.filter(u => u.uid !== user.uid));
+      alert("Account deleted successfully");
+      navigate("/admin");
+    } catch (err) {
+      console.log(err)
+      //onsole.error(err);
+      alert(`An error occurred while deleting the account: ${err.message}`);
+    }
+  }
+  };
+
   useEffect(() => {
     if (loading || authLoading) return;
 
@@ -54,6 +76,7 @@ const AdminUserList = () => {
           console.error('Error fetching users:', error);
         }
       };
+
 
       const fetchDeletedArticles = async () => {
         try {
@@ -105,7 +128,7 @@ const AdminUserList = () => {
                 <td>{user.email}</td>
                 <td>{user.is_admin ? 'ADMIN' : ''}</td>
                 <td>
-                  <button className="delete-button">Delete</button>
+                  <button className="delete-button" onClick={() => handleDelete(user)}>Delete</button>
                 </td>
               </tr>
             ))}
