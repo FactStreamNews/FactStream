@@ -80,7 +80,8 @@ const registerWithEmailAndPassword = async (name, email, password) => {
         sciencePreference: false,
         healthPreference: false,
         sportsPreference: false,
-        travelPreference: false
+        travelPreference: false, 
+        is_private: false,
       });
     } catch (err) {
       console.error(err);
