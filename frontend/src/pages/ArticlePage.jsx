@@ -6,6 +6,8 @@ import { db } from '../config/firebase.js';
 import './ArticlePage.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';
+import Modal from 'react-modal'; 
+
 
 const ArticlePage = () => {
   const { id } = useParams();
@@ -22,6 +24,10 @@ const ArticlePage = () => {
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+
 
 
 
@@ -158,6 +164,29 @@ const ArticlePage = () => {
       console.error("Error Deleting Comment:", error);
     }
   }
+
+  const handleReport = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert('Please sign in to report articles.');
+      return;
+    }
+    try {
+      const reportsRef = collection(db, 'reports');
+      await addDoc(reportsRef, {
+        userId: user.uid,
+        articleId: id,
+        reason: reportReason,
+        status: 'Pending',
+        createdAt: new Date()
+      });
+      setReportReason('');
+      setIsReportModalOpen(false);
+      alert('Report submitted successfully');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+    }
+  };
 
   // check if user liked article
   useEffect(() => {
@@ -354,6 +383,12 @@ const ArticlePage = () => {
             >
               {hasSaved ? 'Unsave' : 'Save'}
             </button>
+            <button
+            className="report-button"
+            onClick={() => setIsReportModalOpen(true)}
+          >
+            Report
+          </button>
           </div>
 
           <div
@@ -412,6 +447,38 @@ const ArticlePage = () => {
             </div>
           ))}
         </div>
+
+        <Modal
+        isOpen={isReportModalOpen}
+        onRequestClose={() => setIsReportModalOpen(false)}
+        contentLabel="Report Article"
+      >
+        <h2>Report Article</h2>
+        <form onSubmit={handleReport}>
+          <label>
+            Reason for report:
+            <select value={reportReason} onChange={(e) => setReportReason(e.target.value)} required>
+              <option value="">Select a reason</option>
+              <option value="Inappropriate content">Inappropriate content</option>
+              <option value="Spam">Spam</option>
+              <option value="False information">False information</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          {reportReason === 'Other' && (
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              placeholder="Please provide a reason"
+              rows={4}
+              cols={50}
+              required
+            />
+          )}
+          <button type="submit">Submit Report</button>
+          <button type="button" onClick={() => setIsReportModalOpen(false)}>Cancel</button>
+        </form>
+      </Modal>
       </div>
     );
   };
