@@ -26,6 +26,7 @@ const ArticlePage = () => {
 
 
   const fetchUserName = async () => {
+    if (user) {
     try {
       const q = query(collection(db, "users"), where("uid", "==", user?.uid));
       const doc = await getDocs(q);
@@ -36,6 +37,7 @@ const ArticlePage = () => {
       console.error(err);
       alert("An error occured while fetching user data");
     }
+  }
   };
   useEffect(() => {
     const fetchAdminStatus = async () => {
@@ -366,7 +368,15 @@ const ArticlePage = () => {
                 <p>
                   <strong>
                     {comment.isPrivate ? 'Anonymous' : <Link to={`/profile/${comment.userId}`}>{comment.userName}</Link>}
+                    {isAdmin && comment.isPrivate && (
+                      <span>
+                        {' ('}
+                        <Link to={`/profile/${comment.userId}`}>{comment.userName}</Link>
+                        {')'}
+                      </span>
+                    )}
                   </strong>
+                  
                   ({new Date(comment.createdAt.toDate()).toLocaleString()}): {comment.text}
                   {isAdmin && (
                   <button className='delete-comment' onClick={() => handleDeleteComment(comment.id)}>Delete</button>
