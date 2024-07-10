@@ -21,6 +21,8 @@ const ArticlePage = () => {
   const [newComment, setNewComment] = useState(''); // new comment
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
 
 
   const fetchUserName = async () => {
@@ -35,6 +37,33 @@ const ArticlePage = () => {
       alert("An error occured while fetching user data");
     }
   };
+  useEffect(() => {
+    const fetchAdminStatus = async () => {
+      if (user) {
+        console.log(`Fetching admin status for user: ${user.uid}`);
+        
+        // Query to find the document with the uid field
+        const q = query(collection(db, 'users'), where('uid', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        const doc1 = await getDocs(q);
+        const data = doc1.docs[0].data();
+        const docID = doc1.docs[0].id;
+        const docRef = doc(db, "users", docID);
+
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          console.log(`User data: ${JSON.stringify(userDoc.data())}`);
+          setIsAdmin(userDoc.data().is_admin || false);
+        } else {
+          console.log('No such document!');
+        }
+      }
+    };
+
+    fetchAdminStatus();
+  }, [user, loading]);
+
+
 
   // Fetch article data
   useEffect(() => {
@@ -110,6 +139,23 @@ const ArticlePage = () => {
   const handleCancelComment = () => {
     setNewComment('');
   };
+
+  const handleDeleteComment = async (commentID) => {
+    try { 
+      const confirm = window.confirm("Are you sure you want to delete this comment?");
+      if (confirm) {
+      const commentRef = doc(db, 'articles', id, 'comments', commentID);
+      await deleteDoc(commentRef);
+
+      setComments(prevComments => prevComments.filter(comment => comment.id !== commentID));
+      window.alert("Comment Deleted");
+      } else{
+        window.alert("Comment deletion cancelled");
+      }
+    } catch (err) {
+      console.error("Error Deleting Comment:", error);
+    }
+  }
 
   // check if user liked article
   useEffect(() => {
@@ -322,6 +368,9 @@ const ArticlePage = () => {
                     {comment.isPrivate ? 'Anonymous' : <Link to={`/profile/${comment.userId}`}>{comment.userName}</Link>}
                   </strong>
                   ({new Date(comment.createdAt.toDate()).toLocaleString()}): {comment.text}
+                  {isAdmin && (
+                  <button className='delete-button' onClick={() => handleDeleteComment(comment.id)}>Delete</button>
+                )}
                 </p>
               </div>
             ))}
