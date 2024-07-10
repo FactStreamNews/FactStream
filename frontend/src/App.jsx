@@ -39,7 +39,7 @@ const App = () => {
     {path: '/health', component: HealthPage}, 
     {path: '/travel', component: TravelPage},
     {path: 'admin', component: AdminUserList},
-    { path: '/profile/:userId', component: Dashboard },  // Add this line
+    { path: '/profile/:userId', component: UserProfile },  // Add this line
     {path: '/userprofile', component: UserProfile}, 
 ];
  
