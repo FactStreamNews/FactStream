@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./Dashboard.css";
 import { auth, db, logout } from "../firebase";
 import { updateEmail, updatePassword, deleteUser } from "firebase/auth";
@@ -9,6 +9,7 @@ import { doc, deleteDoc } from "firebase/firestore";
 import PreferencesModal from "../components/PreferencesModal";
 
 function Dashboard() {
+  const { userId } = useParams(); // Access userId from URL parameter
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState("");
   const [profilePicture, setProfilePicture] = useState(""); // New state for profile picture URL
@@ -25,7 +26,7 @@ function Dashboard() {
 
   const fetchUserName = async () => {
     try {
-      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+      const q = query(collection(db, "users"), where("uid", "==", userId));
       const doc = await getDocs(q);
       const data = doc.docs[0].data();
       const newPreferences = [];
@@ -50,6 +51,7 @@ function Dashboard() {
       setName(data.name);
       setProfilePicture(data.profilePictureUrl); // Set profile picture URL
       setPreferences(newPreferences);
+      setEmail(data.email);
     } catch (err) {
       console.error(err);
       alert("An error occured while fetching user data");
@@ -192,15 +194,15 @@ function Dashboard() {
   
   return (
     <div>
-      <h1>Welcome {name}</h1>
+      <h1>{name}</h1>
       {/* Other UI elements */}
       <div>
-        <label>Email: {user?.email}</label>
+        <label>Email: {email}</label>
         
       </div>
       <div>
         <h2>Profile Settings</h2>
-        <p>Your profile is {isPublic ? 'public' : 'private'}.</p>
+        <p>{name}'s profile is {isPublic ? 'public' : 'private'}.</p>
       </div>
       <PreferencesModal
         isOpen={isModalOpen}
@@ -208,7 +210,7 @@ function Dashboard() {
         onSave={handleSavePreferences}
       />
       <div>
-        <h2>Your Preferences</h2>
+        <h2>{name}'s Preferences</h2>
         {preferences.length > 0 ? (
           <ul>
             {preferences.map((preference, index) => (
