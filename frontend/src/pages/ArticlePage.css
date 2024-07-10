@@ -45,6 +45,20 @@
     font-size: 16px;
     border-radius: 5px;
   }
+
+  .dislike-button{
+    background-color: orange; 
+    color: white; 
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+  }
+
+  .dislike-button.disliked {
+    background-color: darkorange; 
+  }
   
   .like-button.liked {
     background-color: darkorange; 
@@ -68,10 +82,6 @@
     background-color: darkorange; 
   }
   
-  .save-button:disabled {
-    background-color: gray; 
-    cursor: not-allowed; 
-  }
   .button-container {
     display: flex;
     align-items: center;
