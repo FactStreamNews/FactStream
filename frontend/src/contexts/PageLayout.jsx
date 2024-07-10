@@ -91,6 +91,11 @@ const Navbar = () => {
          )}
          </div>
         <div>
+          
+          {user && (
+              <Button component={Link} to="/myreports" color="inherit"> My Reports </Button>
+
+          )}
         {user && (
             <Button component={Link} to="/admin" color="inherit"> {isAdmin && "ADMIN"}</Button>
           

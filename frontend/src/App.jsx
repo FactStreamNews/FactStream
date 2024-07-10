@@ -20,6 +20,7 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import SavedArticles from './pages/SavedArticles';
 import UserProfile from './pages/UserProfile';
+import MyReports from './components/MyReports';
 
 const App = () => {
   //const [routes, setRoutes] = useState([]);
@@ -41,6 +42,7 @@ const App = () => {
     {path: 'admin', component: AdminUserList},
     { path: '/profile/:userId', component: UserProfile },  // Add this line
     {path: '/userprofile', component: UserProfile}, 
+    {path: '/myreports', component: MyReports}
 ];
  
 return (

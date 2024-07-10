@@ -1,0 +1,34 @@
+/* src/components/MyReports.css */
+
+.my-reports {
+    padding: 20px;
+  }
+  
+  .my-reports h1 {
+    margin-bottom: 20px;
+  }
+  
+  .my-reports table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .my-reports th,
+  .my-reports td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .my-reports th {
+    background-color: #f2f2f2;
+    text-align: left;
+  }
+  
+  .my-reports tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .my-reports tr:hover {
+    background-color: #ddd;
+  }
+  
