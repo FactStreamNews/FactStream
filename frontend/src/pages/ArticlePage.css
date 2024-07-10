@@ -78,4 +78,7 @@
     margin-bottom: 20px;
     gap: 60px; /* Adjust the spacing between the buttons */
   }
+  .delete-button {
+    margin-left: 10px;
+  }
   
