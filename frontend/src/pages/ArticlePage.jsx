@@ -369,7 +369,7 @@ const ArticlePage = () => {
                   </strong>
                   ({new Date(comment.createdAt.toDate()).toLocaleString()}): {comment.text}
                   {isAdmin && (
-                  <button className='delete-button' onClick={() => handleDeleteComment(comment.id)}>Delete</button>
+                  <button className='delete-comment' onClick={() => handleDeleteComment(comment.id)}>Delete</button>
                 )}
                 </p>
               </div>
@@ -379,10 +379,14 @@ const ArticlePage = () => {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Add a comment"
+                rows={4}
+                cols={50}
                 required
               />
+              <div className='form-buttons'>
               <button type="submit">Submit</button>
               <button type="button" onClick={handleCancelComment}>Cancel</button>
+              </div>
             </form>
           </div>
 
