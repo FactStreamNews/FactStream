@@ -104,6 +104,10 @@ const Navbar = () => {
         ) : (
           <Button component={Link} to="/signin" color="inherit">Sign In</Button>
         )}
+           {user && (
+            <Button component={Link} to="/userprofile" color="inherit">USER PROFILE</Button>
+          
+          )}
         </div>
       </Toolbar>
     </AppBar>

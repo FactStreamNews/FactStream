@@ -19,6 +19,7 @@ import {AuthProvider} from './contexts/AuthProvider';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import SavedArticles from './pages/SavedArticles';
+import UserProfile from './pages/UserProfile';
 
 const App = () => {
   //const [routes, setRoutes] = useState([]);
@@ -38,7 +39,8 @@ const App = () => {
     {path: '/health', component: HealthPage}, 
     {path: '/travel', component: TravelPage},
     {path: 'admin', component: AdminUserList},
-    { path: '/profile/:userId', component: Dashboard }  // Add this line
+    { path: '/profile/:userId', component: Dashboard },  // Add this line
+    {path: '/userprofile', component: UserProfile}, 
 ];
  
 return (
