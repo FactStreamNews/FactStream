@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
-import { updateDoc, doc, arrayUnion, arrayRemove,addDoc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const NewsPage = () => {
@@ -16,8 +16,9 @@ const NewsPage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false); 
   const [articleToDelete, setArticleToDelete] = useState(null);
-
-
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const articlesPerPage = 10;
   useEffect(() => {
     
     const fetchArticles = async () => {
@@ -185,11 +186,24 @@ const NewsPage = () => {
     return isSaved;
   };
 
+  const indexOfLastArticle = currentPage * articlesPerPage;
+  const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
+  const currentArticles = articles.slice(indexOfFirstArticle, indexOfLastArticle);
+
+  const totalPages = Math.ceil(articles.length / articlesPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage(prevPage => Math.min(prevPage + 1, totalPages));
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prevPage => Math.max(prevPage - 1, 1));
+  };
 
   return (
     <div className="article-list">
       <h1>News Articles</h1>
-      {articles.map((article, index) => (
+      {currentArticles.map((article, index) => (
         <div key={index} className="article-item">
          {user && isAdmin && (
                <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
@@ -223,6 +237,11 @@ const NewsPage = () => {
           <button onClick={handleCancelDelete} className="cancel-button">No</button>
         </div>
       )}
+      <div className="pagination">
+        <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+      </div>
     </div>
   );
 };
