@@ -202,7 +202,7 @@ function Dashboard() {
       <button className="dashboard__btn-small" onClick={handleSaveProfile}>Save</button>
       {/* Other UI elements */}
       <div>
-        <label>Email: {user?.email}</label>
+        <label>Email: {user?.email}     </label>
         {editingName ? (
           <div>
             <input
@@ -227,19 +227,8 @@ function Dashboard() {
             {updating ? "Updating..." : "Update Password"}
           </button>
         </div>
-        <div>
-          <button className="dashboard__btn" onClick={logout}>
-            Logout
-          </button>
-        </div>
       </div>
-      <button className="dashboard__btn" onClick={handleDeleteUser}>
-        Delete Account
-      </button>
       <div>
-        <button className="dashboard__btn" onClick={handleOpenModal}>
-          Set Preferences
-        </button>
         <h2>Profile Settings</h2>
         <p>Your profile is {isPublic ? 'public' : 'private'}.</p>
         <button onClick={togglePrivacy}>
@@ -262,7 +251,18 @@ function Dashboard() {
         ) : (
           <p>You have not set any preferences yet.</p>
         )}
+        <button className="dashboard__btn" onClick={handleOpenModal}>
+          Set Preferences
+        </button>
       </div>
+      <div>
+          <button className="dashboard__btn" onClick={logout}>
+            Logout
+          </button>
+          <button className="dashboard__btn" onClick={handleDeleteUser}>
+        Delete Account
+      </button>
+        </div>
     </div>
   );
 }
