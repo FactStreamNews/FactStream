@@ -218,7 +218,7 @@ function Dashboard() {
             ))}
           </ul>
         ) : (
-          <p>You have not set any preferences yet.</p>
+          <p>{name} has not set any preferences yet.</p>
         )}
       </div>
     </div>
