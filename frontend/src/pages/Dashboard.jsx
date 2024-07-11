@@ -50,6 +50,9 @@ function Dashboard() {
       setName(data.name);
       setProfilePicture(data.profilePictureUrl); // Set profile picture URL
       setPreferences(newPreferences);
+      const priv = data.is_private;
+      console.log(priv);
+      setIsPublic(!priv);
     } catch (err) {
       console.error(err);
       alert("An error occured while fetching user data");
@@ -57,10 +60,10 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    const savedIsPublic = localStorage.getItem("isPublic");
-    if (savedIsPublic !== null) {
-      setIsPublic(JSON.parse(savedIsPublic));
-    }
+    //const savedIsPublic = localStorage.getItem("isPublic");
+   // if (savedIsPublic !== null) {
+  //    setIsPublic(JSON.parse(savedIsPublic));
+   // }
     if (loading) return;
     if (!user) return navigate("/");
     fetchUserName();
