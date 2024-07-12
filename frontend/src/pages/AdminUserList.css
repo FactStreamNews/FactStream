@@ -1,52 +1,72 @@
-/* src/pages/AdminUserList.css */
 .admin-container {
-    display: flex;
-    justify-content: space-between;
-    padding: 20px;
-  }
-  
-  .admin-user-list,
-  .admin-deleted-articles {
-    width: 48%;
-  }
-  
-  .admin-user-list table,
-  .admin-deleted-articles table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .admin-user-list th,
-  .admin-user-list td,
-  .admin-deleted-articles th,
-  .admin-deleted-articles td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-  
-  .admin-user-list th,
-  .admin-deleted-articles th {
-    background-color: #f2f2f2;
-    text-align: left;
-  }
-  
-  .pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-  
-  .pagination-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    margin: 0 5px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  .pagination-button:hover {
-    background-color: #0056b3;
-  }
-  
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  flex-wrap: wrap;
+}
+
+.admin-user-list, .admin-deleted-articles {
+  width: 50%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+td {
+  word-wrap: break-word;
+}
+
+.delete-button {
+  background-color: #f44336;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination-button {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+th, td {
+  min-width: 100px; /* Ensure each column has enough space */
+}
+
+.admin-deleted-articles table {
+  table-layout: auto;
+}

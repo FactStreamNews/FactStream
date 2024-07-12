@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from '../firebase';
 import { deleteUser } from 'firebase/auth';
+
 import './AdminUserList.css';
 
 const AdminUserList = () => {
@@ -118,6 +119,8 @@ const AdminUserList = () => {
               <th>Name</th>
               <th>Email</th>
               <th>Admin</th>
+              <th>Is Anonymous?</th>
+
               <th>Actions</th>
             </tr>
           </thead>
@@ -127,6 +130,8 @@ const AdminUserList = () => {
                 <td>{user.name}</td>
                 <td>{user.email}</td>
                 <td>{user.is_admin ? 'ADMIN' : ''}</td>
+                <td>{user.is_private ? 'Yes' : 'No'}</td>
+
                 <td>
                   <button className="delete-button" onClick={() => handleDelete(user)}>Delete</button>
                 </td>
