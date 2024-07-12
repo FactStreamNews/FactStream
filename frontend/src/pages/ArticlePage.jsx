@@ -51,7 +51,7 @@ const ArticlePage = () => {
   useEffect(() => {
     const fetchAdminStatus = async () => {
       if (user) {
-        console.log(`Fetching admin status for user: ${user.uid}`);
+        //console.log(`Fetching admin status for user: ${user.uid}`);
         
         // Query to find the document with the uid field
         const q = query(collection(db, 'users'), where('uid', '==', user.uid));
@@ -63,7 +63,7 @@ const ArticlePage = () => {
 
         if (!querySnapshot.empty) {
           const userDoc = querySnapshot.docs[0];
-          console.log(`User data: ${JSON.stringify(userDoc.data())}`);
+          //console.log(`User data: ${JSON.stringify(userDoc.data())}`);
           setIsAdmin(userDoc.data().is_admin || false);
         } else {
           console.log('No such document!');
@@ -156,10 +156,21 @@ const ArticlePage = () => {
       const confirm = window.confirm("Are you sure you want to delete this comment?");
       if (confirm) {
       const commentRef = doc(db, 'articles', id, 'comments', commentID);
+      const docSnap = await getDoc(commentRef);
+    //  console.log(data);
+      //Store Deleted comment in Firebase
+      await addDoc(collection(db, "deleted_comments"), {
+        comment_id: commentID,
+        timestamp: docSnap.data().createdAt,
+        deleted_by: user.uid,
+        content: docSnap.data().text
+      });
       await deleteDoc(commentRef);
 
       setComments(prevComments => prevComments.filter(comment => comment.id !== commentID));
       window.alert("Comment Deleted");
+      console.log("here");
+
       } else{
         window.alert("Comment deletion cancelled");
       }
