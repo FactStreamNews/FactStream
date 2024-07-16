@@ -29,21 +29,24 @@ const PopularPage = () => {
           published: article.published && article.published._seconds 
             ? new Date(article.published._seconds * 1000)
             : 'Unknown',
-          likes: article.likes || 0
+          likes: article.likes || 0,
+          dislikes: article.dislikes || 0,
+          totalLikes: (article.likes || 0) - (article.dislikes || 0)
         }));
 
 
       
         // sort articles by likes
         const sortedArticles = articlesWithFormattedDates.sort((a, b) => {
-            if (a.likes > 0 && b.likes > 0) {
+            if (a.totalLikes > 0 && b.totalLikes > 0) {
               return b.likes - a.likes; // Sort by likes descending
-            } else if (a.likes === 0 && b.likes === 0) {
+            } else if (a.totalLikes === 0 && b.totalLikes === 0) {
               return b.published - a.published; // Sort by date descending
             } else {
-              return b.likes - a.likes; // Sort by likes descending
+              return b.totalLikes - a.totalLikes; // Sort by likes descending
             }
           });
+          console.log(sortedArticles);
        const topArticles = sortedArticles.slice(0,10);
         setArticles(topArticles);
       } catch (error) {
@@ -228,6 +231,7 @@ const PopularPage = () => {
           <div className="article-meta">
             <span>Published on: {article.published.toLocaleString()}</span>
             <span>Likes: {article.likes || 0}</span>
+            <span>Dislikes: {article.dislikes || 0}</span>
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream
