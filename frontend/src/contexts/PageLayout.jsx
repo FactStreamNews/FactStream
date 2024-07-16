@@ -69,6 +69,7 @@ const Navbar = () => {
       <Toolbar style={{ display: 'flex', justifyContent: 'space-between' }}>
         <Typography variant="h6" component="div">
           <Button component={Link} to="/" color="inherit">FactStream</Button>
+          <Button component={Link} to="/popular" color="inherit">Popular</Button>
         </Typography>
         <div>
          {user && techPref && (

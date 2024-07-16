@@ -202,7 +202,7 @@ const NewsPage = () => {
 
   return (
     <div className="article-list">
-      <h1>News Articles</h1>
+      <h1>Popular</h1>
       {currentArticles.map((article, index) => (
         <div key={index} className="article-item">
          {user && isAdmin && (
@@ -221,7 +221,6 @@ const NewsPage = () => {
           <div className="article-meta">
             <span>Published on: {article.published.toLocaleString()}</span>
             <span>Likes: {article.likes || 0}</span>
-            <span>Dislikes: {article.dislikes || 0}</span>
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream

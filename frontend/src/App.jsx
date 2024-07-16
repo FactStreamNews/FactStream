@@ -21,6 +21,7 @@ import Dashboard from './pages/Dashboard';
 import SavedArticles from './pages/SavedArticles';
 import UserProfile from './pages/UserProfile';
 import MyReports from './components/MyReports';
+import Popular from './pages/PopularPage';
 
 const App = () => {
   //const [routes, setRoutes] = useState([]);
@@ -42,7 +43,8 @@ const App = () => {
     {path: 'admin', component: AdminUserList},
     { path: '/profile/:userId', component: UserProfile },  // Add this line
     {path: '/userprofile', component: UserProfile}, 
-    {path: '/myreports', component: MyReports}
+    {path: '/myreports', component: MyReports}, 
+    {path: '/popular', component: Popular},
 ];
  
 return (
