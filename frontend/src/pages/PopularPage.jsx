@@ -7,7 +7,7 @@ import { auth } from '../firebase';
 import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
-const NewsPage = () => {
+const PopularPage = () => {
   
   const [articles, setArticles] = useState([]);
   const [savedArticles, setSavedArticles] = useState([]);
@@ -24,21 +24,28 @@ const NewsPage = () => {
     const fetchArticles = async () => {
       try {
         const response = await axios.get('/articles');
-        console.log(response);
         const articlesWithFormattedDates = response.data.map(article => ({
           ...article,
           published: article.published && article.published._seconds 
             ? new Date(article.published._seconds * 1000)
-            : 'Unknown'
+            : 'Unknown',
+          likes: article.likes || 0
         }));
 
 
-
       
-        // sort articles by date
-       const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
-
-        setArticles(sortedArticles);
+        // sort articles by likes
+        const sortedArticles = articlesWithFormattedDates.sort((a, b) => {
+            if (a.likes > 0 && b.likes > 0) {
+              return b.likes - a.likes; // Sort by likes descending
+            } else if (a.likes === 0 && b.likes === 0) {
+              return b.published - a.published; // Sort by date descending
+            } else {
+              return b.likes - a.likes; // Sort by likes descending
+            }
+          });
+       const topArticles = sortedArticles.slice(0,10);
+        setArticles(topArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
       }
@@ -237,13 +244,8 @@ const NewsPage = () => {
           <button onClick={handleCancelDelete} className="cancel-button">No</button>
         </div>
       )}
-      <div className="pagination">
-        <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
-        <span>Page {currentPage} of {totalPages}</span>
-        <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
-      </div>
     </div>
   );
 };
 
-export default NewsPage;
+export default PopularPage;
