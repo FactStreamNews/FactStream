@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import { auth, db, logout } from "../firebase";
 import { updateEmail, updatePassword, deleteUser } from "firebase/auth";
@@ -231,9 +231,10 @@ function Dashboard() {
       <div>
         <h2>Profile Settings</h2>
         <p>Your profile is {isPublic ? 'public' : 'private'}.</p>
-        <button onClick={togglePrivacy}>
+        <button className="dashboard__btn-small" onClick={togglePrivacy}>
           {isPublic ? 'Make Private' : 'Make Public'}
         </button>
+        <Link to="/myreports" className="dashboard__btn-small report-btn">My Reports</Link>
       </div>
       <PreferencesModal
         isOpen={isModalOpen}

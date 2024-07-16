@@ -35,6 +35,10 @@
   font-size: 14px; /* Slightly smaller font size for smaller button */
 }
 
+.report-btn {
+  margin-left: 100px; /* Adjust this value to control the horizontal shift */
+}
+
 .dashboard__btn:hover,
 .dashboard__btn2:hover,
 .dashboard__btn3:hover,
