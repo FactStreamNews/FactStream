@@ -19,25 +19,48 @@ const NewsPage = () => {
   
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 10;
+
+  const countLinks = (htmlContent, articleLink) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    const links = doc.querySelectorAll('a[href^="http"]');
+    const host = new URL(articleLink);
+    const externalLinks = Array.from(links).filter(link => {
+      const url = new URL(link.href);
+      return url.host !== host.hostname;
+    });
+
+    let article_score = 0;
+    if (externalLinks.length > 4) {
+      const diff = externalLinks.length - 4;
+     // console.log(diff);
+      const factor = diff / 2;
+      article_score = 10 - factor;
+    } else {
+      article_score = externalLinks.length + 6;
+    }
+  
+    return article_score;
+    
+  };
   useEffect(() => {
     
     const fetchArticles = async () => {
       try {
         const response = await axios.get('/articles');
-        console.log(response);
         const articlesWithFormattedDates = response.data.map(article => ({
           ...article,
           published: article.published && article.published._seconds 
             ? new Date(article.published._seconds * 1000)
-            : 'Unknown'
+            : 'Unknown', 
+          qualityScore: countLinks(article.content, article.link)
         }));
 
 
-
-      
+        
         // sort articles by date
-       const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
-
+        const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
+        
         setArticles(sortedArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -222,6 +245,7 @@ const NewsPage = () => {
             <span>Published on: {article.published.toLocaleString()}</span>
             <span>Likes: {article.likes || 0}</span>
             <span>Dislikes: {article.dislikes || 0}</span>
+            <span>Quality Score: {article.qualityScore}</span>
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream
