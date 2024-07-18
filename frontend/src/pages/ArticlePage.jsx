@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove, addDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../config/firebase.js';
+import { db } from '../config/firebase.js'; 
 import './ArticlePage.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';

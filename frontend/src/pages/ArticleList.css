@@ -99,4 +99,15 @@
   .cancel-button:hover {
     background-color: #bbb;
   }
-  
+
+.filter-container {
+  margin-bottom: 20px;
+}
+
+.filter-container label {
+  margin-right: 10px;
+}
+
+.filter-container select {
+  padding: 5px;
+}

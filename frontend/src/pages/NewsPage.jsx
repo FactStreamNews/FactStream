@@ -17,6 +17,8 @@ const NewsPage = () => {
   const [showConfirm, setShowConfirm] = useState(false); 
   const [articleToDelete, setArticleToDelete] = useState(null);
   
+  const [filter, setFilter] = useState('Relevance'); 
+
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 10;
 
@@ -55,12 +57,17 @@ const NewsPage = () => {
             : 'Unknown', 
           qualityScore: countLinks(article.content, article.link)
         }));
-
-
-        
-        // sort articles by date
-        const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
-        
+  
+        let sortedArticles = [];
+        // need to create algorthmic way to define relevance weight still
+        if (filter === 'Relevance') {
+          sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
+        } else if (filter === 'Most Popular') {
+          sortedArticles = articlesWithFormattedDates.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        } else if (filter === 'Controversial') {
+          sortedArticles = articlesWithFormattedDates.sort((a, b) => (b.likes + b.dislikes) - (a.likes + a.dislikes));
+        }
+  
         setArticles(sortedArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -223,9 +230,22 @@ const NewsPage = () => {
     setCurrentPage(prevPage => Math.max(prevPage - 1, 1));
   };
 
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
+  };
+
+  
   return (
     <div className="article-list">
       <h1>News Articles</h1>
+      <div className="filter-container">
+      <label htmlFor="filter">Filter by: </label>
+      <select id="filter" value={filter} onChange={handleFilterChange}>
+        <option value="Relevance">Relevance</option>
+        <option value="Most Popular">Most Popular</option>
+        <option value="Controversial">Controversial</option>
+      </select>
+    </div>
       {currentArticles.map((article, index) => (
         <div key={index} className="article-item">
          {user && isAdmin && (
