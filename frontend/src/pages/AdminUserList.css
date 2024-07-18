@@ -50,3 +50,70 @@
 .admin-buttons button:hover {
   background-color: #0056b3;
 }
+
+
+/** Manage articles sec **/
+
+.admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 2em;
+  color: #333;
+}
+
+.admin-deleted-articles {
+  margin-bottom: 40px;
+}
+
+.admin-deleted-articles table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.admin-deleted-articles th,
+.admin-deleted-articles td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.admin-deleted-articles th {
+  background-color: #007bff;
+  color: white;
+}
+
+.admin-deleted-articles tr:hover {
+  background-color: #f1f1f1;
+}
+
+.pagination {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.pagination-button {
+  padding: 10px 15px;
+  margin: 0 5px;
+  font-size: 1em;
+  color: #007bff;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pagination-button:hover {
+  background-color: #007bff;
+  color: white;
+}

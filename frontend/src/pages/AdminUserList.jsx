@@ -157,7 +157,7 @@ const AdminLandingPage = () => {
       </div>
       <div className="admin-buttons">
         <button onClick={() => navigate('/admin/manage-users')}>Manage Users</button>
-        <button onClick={() => navigate('/manage-articles')}>Manage Articles</button>
+        <button onClick={() => navigate('/admin/manage-articles')}>Manage Articles</button>
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ import UserProfile from './pages/UserProfile';
 import MyReports from './components/MyReports';
 import Popular from './pages/PopularPage';
 import AdminLandingPage from './pages/AdminUserList';
+import AdminManageArticles from './pages/AdminManageArticles';
 
 const App = () => {
   //const [routes, setRoutes] = useState([]);
@@ -43,6 +44,8 @@ const App = () => {
     {path: '/travel', component: TravelPage},
     {path: 'admin', component: AdminLandingPage},
     {path: 'admin/manage-users', component: AdminUserList},
+    {path: 'admin/manage-articles', component: AdminManageArticles},
+
     { path: '/profile/:userId', component: UserProfile },  // Add this line
     {path: '/userprofile', component: UserProfile}, 
     {path: '/myreports', component: MyReports}, 

@@ -112,6 +112,7 @@ const AdminUserList = () => {
           ))}
         </tbody>
       </table>
+      <button action=''>Back</button>
     </div>
   );
 };
