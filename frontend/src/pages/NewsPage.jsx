@@ -31,13 +31,11 @@ const NewsPage = () => {
     const doc = parser.parseFromString(htmlContent, 'text/html');
     const links = doc.querySelectorAll('a[href^="http"]');
     const host = new URL(articleLink);
-    console.log(host);
     const excludedHosts = ['twitter.com', 'instagram.com', 'linkedin.com'];
 
     const normalizeHost = (hostname) => hostname.replace(/^www\./, '');
 
     const normalizedHost = normalizeHost(host.hostname);
-    console.log(normalizedHost);
 
     const externalLinks = Array.from(links).filter(link => {
       const url = new URL(link.href);
@@ -51,7 +49,6 @@ const NewsPage = () => {
       return true;
     });
     let article_score = 0;
-    console.log(externalLinks);
     if (externalLinks.length > 4) {
       const diff = externalLinks.length - 4;
      // console.log(diff);
@@ -76,6 +73,30 @@ const NewsPage = () => {
             : 'Unknown', 
           qualityScore: countLinks(article.content, article.link)
         }));
+
+        //Handle automatic deletion of low quality articles
+        const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7);
+        console.log(lowquality);
+        const deleteLowQualityArticles = async () => {
+          for (const article of lowquality) {
+            try {
+              await addDoc(collection(db, 'deleted_articles'), {
+                ...article, 
+                deletedBy: 'Automatically',
+                reason: 'Low-Quality',
+              });
+              console.log(`Article '${article.title}' deleted successfully`);
+
+              await deleteDoc(doc(db, 'articles', article.id));
+              setArticles(articles.filter(temparticle => temparticle.id !== article.id));
+              console.log('Article deleted successfully');
+            } catch (error) {
+              console.error(`Error deleting article '${article.title}':`, error);
+            }
+          }
+        };
+
+        deleteLowQualityArticles();
   
         let sortedArticles = [];
         // need to create algorthmic way to define relevance weight still

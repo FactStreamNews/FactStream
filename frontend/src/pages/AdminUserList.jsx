@@ -104,6 +104,7 @@ const AdminLandingPage = () => {
           
           const highquality = articlesWithScores.filter(article => article.qualityScore >= 7);
           const lowquality = articlesWithScores.filter(article => article.qualityScore < 7);
+          console.log(lowquality);
           sethighQualityCount(highquality.length);
           setlowQualityCount(lowquality.length);
         } catch (error) {
