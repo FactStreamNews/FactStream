@@ -31,12 +31,27 @@ const NewsPage = () => {
     const doc = parser.parseFromString(htmlContent, 'text/html');
     const links = doc.querySelectorAll('a[href^="http"]');
     const host = new URL(articleLink);
+    console.log(host);
+    const excludedHosts = ['twitter.com', 'instagram.com', 'linkedin.com'];
+
+    const normalizeHost = (hostname) => hostname.replace(/^www\./, '');
+
+    const normalizedHost = normalizeHost(host.hostname);
+    console.log(normalizedHost);
+
     const externalLinks = Array.from(links).filter(link => {
       const url = new URL(link.href);
-      return url.host !== host.hostname;
+      const linkHost = url.host;
+  
+      // Check if the link host is the same as the article host or is in the excluded list
+      if (linkHost === host.hostname || linkHost === normalizedHost || excludedHosts.includes(linkHost)) {
+        return false;
+      }
+  
+      return true;
     });
-
     let article_score = 0;
+    console.log(externalLinks);
     if (externalLinks.length > 4) {
       const diff = externalLinks.length - 4;
      // console.log(diff);
