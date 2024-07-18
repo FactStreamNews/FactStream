@@ -19,6 +19,10 @@ const NewsPage = () => {
   
   const [filter, setFilter] = useState('Relevance'); 
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredArticles, setFilteredArticles] = useState([]);
+
+
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 10;
 
@@ -73,6 +77,8 @@ const NewsPage = () => {
         console.error('Error fetching articles:', error);
       }
     };
+
+
     const fetchAdminStatus = async () => {
       if (user) {
         console.log(`Fetching admin status for user: ${user.uid}`);
@@ -128,6 +134,22 @@ const NewsPage = () => {
     setShowConfirm(false);
     setArticleToDelete(null);
   };
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    
+    if (query.trim() === '') {
+      setFilteredArticles([]);
+      return;
+    }
+  
+    const filtered = articles.filter(article => 
+      article.title.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredArticles(filtered);
+  };
+  
 
   // delete article for admin use
   const handleConfirmDelete = async () => {
@@ -238,6 +260,15 @@ const NewsPage = () => {
   return (
     <div className="article-list">
       <h1>News Articles</h1>
+
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search articles by title..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
+      </div>
       <div className="filter-container">
       <label htmlFor="filter">Filter by: </label>
       <select id="filter" value={filter} onChange={handleFilterChange}>
@@ -246,7 +277,41 @@ const NewsPage = () => {
         <option value="Controversial">Controversial</option>
       </select>
     </div>
-      {currentArticles.map((article, index) => (
+    {searchQuery ? (
+        <div className="search-results">
+          {filteredArticles.map((article, index) => (
+            <div key={index} className="article-item">
+              {user && isAdmin && (
+                <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+                  Delete
+                </button>
+              )}
+              <h2>
+                <Link to={`/article/${article.id}`}>{article.title}</Link>
+              </h2>
+              <h3>{article.category}</h3>
+              <div className="img-container">
+                <Link to={`/article/${article.id}`}>
+                  <img src={article.imgUrl} alt={article.title} />
+                </Link>
+              </div>
+              <div className="article-meta">
+                <span>Published on: {article.published.toLocaleString()}</span>
+                <span>Likes: {article.likes || 0}</span>
+                <span>Dislikes: {article.dislikes || 0}</span>
+                <span>Quality Score: {article.qualityScore}</span>
+              </div>
+              <Link 
+                to={`/article/${article.id}`} // Example route path within FactStream
+                className="read-more"
+              >
+                Read more
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        ) :currentArticles.map((article, index) => (
         <div key={index} className="article-item">
          {user && isAdmin && (
                <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
