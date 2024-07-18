@@ -55,7 +55,7 @@ const NewsPage = () => {
     if (externalLinks.length > 4) {
       const diff = externalLinks.length - 4;
      // console.log(diff);
-      const factor = diff / 2;
+      const factor = diff / 4;
       article_score = 10 - factor;
     } else {
       article_score = externalLinks.length + 6;

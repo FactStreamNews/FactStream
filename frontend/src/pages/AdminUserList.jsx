@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -14,6 +15,8 @@ const AdminLandingPage = () => {
   const [userCount, setUserCount] = useState(0);
   const [articleCount, setArticleCount] = useState(0);
   const [categoryCounts, setCategoryCounts] = useState({});
+  const [highQualityCount, sethighQualityCount] = useState(0);
+  const [lowQualityCount, setlowQualityCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,12 +56,56 @@ const AdminLandingPage = () => {
           console.error('Error fetching user count:', error);
         }
       };
-
+      const getScore = (htmlContent, articleLink) => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const links = doc.querySelectorAll('a[href^="http"]');
+        const host = new URL(articleLink);
+        const excludedHosts = ['twitter.com', 'instagram.com', 'linkedin.com'];
+    
+        const normalizeHost = (hostname) => hostname.replace(/^www\./, '');
+    
+        const normalizedHost = normalizeHost(host.hostname);
+    
+        const externalLinks = Array.from(links).filter(link => {
+          const url = new URL(link.href);
+          const linkHost = url.host;
+      
+          // Check if the link host is the same as the article host or is in the excluded list
+          if (linkHost === host.hostname || linkHost === normalizedHost || excludedHosts.includes(linkHost)) {
+            return false;
+          }
+      
+          return true;
+        });
+        let article_score = 0;
+        if (externalLinks.length > 4) {
+          const diff = externalLinks.length - 4;
+         // console.log(diff);
+          const factor = diff / 6;
+          article_score = 10 - factor;
+        } else {
+          article_score = externalLinks.length + 6;
+        }
+      
+        return article_score;
+        
+      };
       const fetchArticleCount = async () => {
         try {
           const articlesCollection = collection(db, 'articles');
           const articlesSnapshot = await getDocs(articlesCollection);
           setArticleCount(articlesSnapshot.size);
+          const response = await axios.get('/articles');
+          const articlesWithScores = response.data.map(article => ({
+            ...article,
+            qualityScore: getScore(article.content, article.link)
+          }));
+          
+          const highquality = articlesWithScores.filter(article => article.qualityScore >= 7);
+          const lowquality = articlesWithScores.filter(article => article.qualityScore < 7);
+          sethighQualityCount(highquality.length);
+          setlowQualityCount(lowquality.length);
         } catch (error) {
           console.error('Error fetching article count:', error);
         }
@@ -104,6 +151,8 @@ const AdminLandingPage = () => {
         {Object.entries(categoryCounts).map(([category, count]) => (
           <p key={category}>Total {category.charAt(0).toUpperCase() + category.slice(1)} Articles: {count}</p>
         ))}
+        <p>Total High Quality Articles: {highQualityCount}</p>
+        <p>Total Low Quality Articles: {lowQualityCount}</p>
       </div>
       <div className="admin-buttons">
         <button onClick={() => navigate('/admin/manage-users')}>Manage Users</button>
