@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from '../firebase';
@@ -8,6 +8,9 @@ import './AdminUserList.css';
 
 const AdminManageArticles = () => {
   const [deletedArticles, setDeletedArticles] = useState([]);
+  const [sources, setSources] = useState([]);
+  const [newSourceUrl, setNewSourceUrl] = useState('');
+  const [newSourceCategory, setNewSourceCategory] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, authLoading, authError] = useAuthState(auth);
@@ -54,9 +57,44 @@ const AdminManageArticles = () => {
         }
       };
 
+      const fetchSources = async () => {
+        try {
+          const sourcesCollection = collection(db, 'sources');
+          const sourcesSnapshot = await getDocs(sourcesCollection);
+          const sourcesList = sourcesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setSources(sourcesList);
+        } catch (error) {
+          console.error('Error fetching sources:', error);
+        }
+      };
+
       fetchDeletedArticles();
+      fetchSources();
     }
   }, [user, isAdmin, loading, authLoading, navigate]);
+
+  const handleAddSource = async () => {
+    if (!newSourceUrl.endsWith('.xml')) {
+      alert('The source URL must end with .xml');
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'sources'), {
+        url: newSourceUrl,
+        category: newSourceCategory
+      });
+      setNewSourceUrl('');
+      setNewSourceCategory('');
+      alert('Source added successfully');
+      const sourcesCollection = collection(db, 'sources');
+      const sourcesSnapshot = await getDocs(sourcesCollection);
+      const sourcesList = sourcesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSources(sourcesList);
+    } catch (error) {
+      console.error('Error adding source:', error);
+      alert('Error adding source');
+    }
+  };
 
   const indexOfLastArticle = currentPage * articlesPerPage;
   const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
@@ -104,6 +142,29 @@ const AdminManageArticles = () => {
               {number + 1}
             </button>
           ))}
+        </div>
+      </div>
+      <div className="admin-sources">
+        <h1>Sources</h1>
+        <ul>
+          {sources.map(source => (
+            <li key={source.id}>{source.url} - {source.category}</li>
+          ))}
+        </ul>
+        <div className="add-source-form">
+          <input
+            type="text"
+            value={newSourceUrl}
+            onChange={(e) => setNewSourceUrl(e.target.value)}
+            placeholder="Source URL (must end with .xml)"
+          />
+          <input
+            type="text"
+            value={newSourceCategory}
+            onChange={(e) => setNewSourceCategory(e.target.value)}
+            placeholder="Category"
+          />
+          <button onClick={handleAddSource}>Add Source</button>
         </div>
       </div>
     </div>
