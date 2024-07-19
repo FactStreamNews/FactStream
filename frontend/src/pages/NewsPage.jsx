@@ -27,9 +27,9 @@ const NewsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 10;
 
-  const calculateRelevance = (likes, dislikes, published) => {
-    const timeSincePublished = (Date.now() - published.toMillis()) / (1000 * 60 * 60); 
-    return (likes - dislikes) / timeSincePublished;
+  const calculateRelevance = (likes, dislikes, publishedTimestamp) => {
+    const timeSincePublished = (Date.now() - publishedTimestamp) / (1000 * 60 * 60); 
+    return ((2 * likes) - (3 *dislikes)) / timeSincePublished;
   };
 
 
@@ -73,13 +73,16 @@ const NewsPage = () => {
     const fetchArticles = async () => {
       try {
         const response = await axios.get('/articles');
-        const articlesWithFormattedDates = response.data.map(article => ({
-          ...article,
-          published: article.published && article.published._seconds 
-            ? new Date(article.published._seconds * 1000)
-            : 'Unknown', 
-          qualityScore: countLinks(article.content, article.link)
-        }));
+        const articlesWithFormattedDates = response.data.map(article => {
+          const publishedTimestamp = article.published._seconds * 1000; 
+          const publishedDate = new Date(publishedTimestamp);
+          return {
+            ...article,
+            published: publishedDate,
+            qualityScore: countLinks(article.content, article.link),
+            relevance: calculateRelevance(article.likes || 0, article.dislikes || 0, publishedTimestamp)
+          };
+        });
 
         //Handle automatic deletion of low quality articles
         const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7 && !article.isRecovered);
@@ -111,7 +114,7 @@ const NewsPage = () => {
         let sortedArticles = [];
         // need to create algorthmic way to define relevance weight still
         if (filter === 'Relevance') {
-          sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
+          sortedArticles = articlesWithFormattedDates.sort((a, b) => b.relevance - a.relevance);
         } else if (filter === 'Most Popular') {
           sortedArticles = articlesWithFormattedDates.sort((a, b) => (b.likes || 0) - (a.likes || 0));
         } else if (filter === 'Controversial') {
@@ -361,6 +364,7 @@ const NewsPage = () => {
                 <span>Likes: {article.likes || 0}</span>
                 <span>Dislikes: {article.dislikes || 0}</span>
                 <span>Quality Score: {article.qualityScore}</span>
+                <span>Relevance Score: {article.relevance}</span>
               </div>
               <Link 
                 to={`/article/${article.id}`} // Example route path within FactStream
@@ -392,6 +396,8 @@ const NewsPage = () => {
             <span>Likes: {article.likes || 0}</span>
             <span>Dislikes: {article.dislikes || 0}</span>
             <span>Quality Score: {article.qualityScore}</span>
+            <span>Relevance Score: {article.relevance}</span>
+
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream
