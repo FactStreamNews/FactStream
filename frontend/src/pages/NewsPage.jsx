@@ -27,6 +27,12 @@ const NewsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 10;
 
+  const calculateRelevance = (likes, dislikes, published) => {
+    const timeSincePublished = (Date.now() - published.toMillis()) / (1000 * 60 * 60); 
+    return (likes - dislikes) / timeSincePublished;
+  };
+
+
   const countLinks = (htmlContent, articleLink) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
