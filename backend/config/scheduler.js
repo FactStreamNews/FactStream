@@ -7,24 +7,31 @@ import { db } from './firebase.js';
 const feeds = {
   tech: [
     'https://moxie.foxnews.com/google-publisher/tech.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
   ],
   politics: [
     'https://moxie.foxnews.com/google-publisher/politics.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
+    'https://rss.politico.com/politics-news.xml',
   ],
   science: [
     'https://moxie.foxnews.com/google-publisher/science.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
   ],
   health: [
     'https://moxie.foxnews.com/google-publisher/health.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml',
   ],
   sports: [
     'https://moxie.foxnews.com/google-publisher/sports.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml',
   ],
   travel: [
     'https://moxie.foxnews.com/google-publisher/travel.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Travel.xml', 
   ],
   general: [
-    
+   'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
   ]
 };
 
