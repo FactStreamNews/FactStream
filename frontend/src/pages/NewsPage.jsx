@@ -364,7 +364,7 @@ const NewsPage = () => {
                 <span>Likes: {article.likes || 0}</span>
                 <span>Dislikes: {article.dislikes || 0}</span>
                 <span>Quality Score: {article.qualityScore}</span>
-                <span>Relevance Score: {article.relevance}</span>
+                <span>Relevance Score: {article.relevance.toFixed(2)}</span>
               </div>
               <Link 
                 to={`/article/${article.id}`} // Example route path within FactStream
@@ -396,7 +396,7 @@ const NewsPage = () => {
             <span>Likes: {article.likes || 0}</span>
             <span>Dislikes: {article.dislikes || 0}</span>
             <span>Quality Score: {article.qualityScore}</span>
-            <span>Relevance Score: {article.relevance}</span>
+            <span>Relevance Score: {article.relevance.toFixed(2)}</span>
 
           </div>
           <Link 
