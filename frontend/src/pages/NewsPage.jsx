@@ -75,15 +75,18 @@ const NewsPage = () => {
         }));
 
         //Handle automatic deletion of low quality articles
-        const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7);
+        const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7 && !article.isRecovered);
         console.log(lowquality);
         const deleteLowQualityArticles = async () => {
           for (const article of lowquality) {
             try {
+              const deleted = new Date().toLocaleString();
               await addDoc(collection(db, 'deleted_articles'), {
                 ...article, 
                 deletedBy: 'Automatically',
-                reason: 'Low-Quality',
+                reason: 'Quality',
+                deletedOn: deleted,
+                article_id: article.id
               });
               console.log(`Article '${article.title}' deleted successfully`);
 
@@ -189,10 +192,20 @@ const NewsPage = () => {
 
   // delete article for admin use
   const handleConfirmDelete = async () => {
+     console.log(articleToDelete);
+     const deleted = new Date().toLocaleString();
     if (articleToDelete) {
       try {
         // Add the article to deleted_articles collection
-        await addDoc(collection(db, 'deleted_articles'), articleToDelete);
+        const {id, ...articlewoID} = articleToDelete;
+        const newIdArticle = {...articlewoID, article_id: id};
+        await addDoc(collection(db, 'deleted_articles'), {
+        ...newIdArticle,
+        reason: 'Admin Decision',
+        deletedOn: deleted,
+        isRecovered: false, 
+        deletedBy: 'admin'
+      });
         
         // Delete the article from articles collection
         await deleteDoc(doc(db, 'articles', articleToDelete.id));

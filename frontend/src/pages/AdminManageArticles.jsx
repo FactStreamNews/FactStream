@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from '../firebase';
@@ -17,6 +17,45 @@ const AdminManageArticles = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 10;
   const navigate = useNavigate();
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const Modal = ({ article, onClose, onRecover }) => {
+    if (!article) return null;
+  
+    return (
+      <div className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={onClose}>&times;</span>
+          <h2>Recover Article</h2>
+          <p>Would you like to recover the article titled '{article.title}'?</p>
+          <button onClick={() => onRecover(article)}>Yes, Recover</button>
+          <button onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    );
+  };
+
+  const handleRecover = async (article) => {
+    try {
+      // Add the article back to the main collection
+      await addDoc(collection(db, 'articles'), {
+        ...article,
+        recoveredOn: new Date(),
+        isRecovered: true
+      });
+  
+      // Remove the article from the deleted collection
+      await deleteDoc(doc(db, 'deleted_articles', article.id));
+  
+      // Update the state
+      setDeletedArticles(deletedArticles.filter(a => a.id !== article.id));
+      alert(`Article '${article.title}' recovered successfully.`);
+    } catch (error) {
+      console.error('Error recovering article:', error);
+      alert('Error recovering article');
+    }
+  };
 
   useEffect(() => {
     const fetchAdminStatus = async () => {
@@ -96,6 +135,13 @@ const AdminManageArticles = () => {
     }
   };
 
+  
+  const handleRowClick = (article) => {
+    console.log(article);
+    setSelectedArticle(article);
+    setIsModalOpen(true);
+  };
+
   const indexOfLastArticle = currentPage * articlesPerPage;
   const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
   const currentArticles = deletedArticles.slice(indexOfFirstArticle, indexOfLastArticle);
@@ -123,14 +169,18 @@ const AdminManageArticles = () => {
                 <th>Title</th>
                 <th>Category</th>
                 <th>Deleted On</th>
+               <th>Deleted By</th>
+               <th>Reason</th>
               </tr>
             </thead>
             <tbody>
               {currentArticles.map(article => (
-                <tr key={article.id}>
+                <tr key={article.id} onClick={() => handleRowClick(article)}>
                   <td>{article.title}</td>
                   <td>{article.category}</td>
-                  <td>{article.deletedOn ? new Date(article.deletedOn.seconds * 1000).toLocaleString() : 'Unknown'}</td>
+                  <td>{article.deletedOn ? article.deletedOn: 'Unknown'}</td>
+                  <td>{article.deletedBy}</td>
+                  <td>{article.reason}</td>
                 </tr>
               ))}
             </tbody>
@@ -167,6 +217,12 @@ const AdminManageArticles = () => {
           <button onClick={handleAddSource}>Add Source</button>
         </div>
       </div>
+      {isModalOpen && (
+    <Modal 
+    article={selectedArticle} 
+    onClose={() => setIsModalOpen(false)}
+    onRecover={handleRecover} />
+  )}
     </div>
   );
 };

@@ -7,6 +7,10 @@ const router = express.Router();
 //get all
 router.get('/articles', async (req, res) => {
     try {
+      //added cache handling
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       const snapshot = await db.collection('articles').get();
       if (snapshot.empty) {
         res.status(404).send('No articles found');

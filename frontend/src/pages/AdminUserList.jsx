@@ -97,11 +97,12 @@ const AdminLandingPage = () => {
           const articlesSnapshot = await getDocs(articlesCollection);
           setArticleCount(articlesSnapshot.size);
           const response = await axios.get('/articles');
+          console.log(response);
           const articlesWithScores = response.data.map(article => ({
             ...article,
             qualityScore: getScore(article.content, article.link)
           }));
-          
+          console.log(articlesWithScores);
           const highquality = articlesWithScores.filter(article => article.qualityScore >= 7);
           const lowquality = articlesWithScores.filter(article => article.qualityScore < 7);
           console.log(lowquality);
