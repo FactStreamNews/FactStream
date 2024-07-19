@@ -318,6 +318,9 @@ const NewsPage = () => {
     if (selected === 'Most Popular'){
       navigate('/popular');
     }
+    if (selected === 'Controversial') {
+      navigate('/controversial');
+    }
   };
 
   

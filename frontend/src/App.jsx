@@ -24,6 +24,7 @@ import MyReports from './components/MyReports';
 import Popular from './pages/PopularPage';
 import AdminLandingPage from './pages/AdminUserList';
 import AdminManageArticles from './pages/AdminManageArticles';
+import Controversial from './pages/ControversialPage';
 
 const App = () => {
   //const [routes, setRoutes] = useState([]);
@@ -50,6 +51,7 @@ const App = () => {
     {path: '/userprofile', component: UserProfile}, 
     {path: '/myreports', component: MyReports}, 
     {path: '/popular', component: Popular},
+    {path: '/controversial', component: Controversial},
 ];
  
 return (
