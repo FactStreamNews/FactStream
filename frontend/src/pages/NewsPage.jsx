@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
@@ -16,6 +16,7 @@ const NewsPage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false); 
   const [articleToDelete, setArticleToDelete] = useState(null);
+  const navigate = useNavigate();
   
   const [filter, setFilter] = useState('Relevance'); 
 
@@ -302,7 +303,12 @@ const NewsPage = () => {
   };
 
   const handleFilterChange = (e) => {
+    const selected = e.target.value;
     setFilter(e.target.value);
+
+    if (selected === 'Most Popular'){
+      navigate('/popular');
+    }
   };
 
   
@@ -322,7 +328,7 @@ const NewsPage = () => {
       <label htmlFor="filter">Filter by: </label>
       <select id="filter" value={filter} onChange={handleFilterChange}>
         <option value="Relevance">Relevance</option>
-        <option value="Most Popular">Most Popular</option>
+        <option value="Most Popular" >Most Popular</option>
         <option value="Controversial">Controversial</option>
       </select>
     </div>
