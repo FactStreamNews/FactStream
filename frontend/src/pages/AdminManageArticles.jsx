@@ -11,6 +11,9 @@ const AdminManageArticles = () => {
   const [sources, setSources] = useState([]);
   const [newSourceUrl, setNewSourceUrl] = useState('');
   const [newSourceCategory, setNewSourceCategory] = useState('');
+  const [newSourceName, setNewSourceName] = useState('');
+  const [newSourceSlant, setNewSourceSlant] = useState('');
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, authLoading, authError] = useAuthState(auth);
@@ -120,10 +123,16 @@ const AdminManageArticles = () => {
     try {
       await addDoc(collection(db, 'sources'), {
         url: newSourceUrl,
-        category: newSourceCategory
+        category: newSourceCategory,
+        name: newSourceName,
+        slant: newSourceSlant
+
       });
       setNewSourceUrl('');
       setNewSourceCategory('');
+      setNewSourceName('');
+      setNewSourceSlant('');
+
       alert('Source added successfully');
       const sourcesCollection = collection(db, 'sources');
       const sourcesSnapshot = await getDocs(sourcesCollection);
@@ -198,7 +207,7 @@ const AdminManageArticles = () => {
         <h1>Sources</h1>
         <ul>
           {sources.map(source => (
-            <li key={source.id}>{source.url} - {source.category}</li>
+            <li key={source.id}>{source.name} | {source.category} - {source.url}</li>
           ))}
         </ul>
         <div className="add-source-form">
@@ -213,6 +222,18 @@ const AdminManageArticles = () => {
             value={newSourceCategory}
             onChange={(e) => setNewSourceCategory(e.target.value)}
             placeholder="Category"
+          />
+            <input
+            type="text"
+            value={newSourceName}
+            onChange={(e) => setNewSourceName(e.target.value)}
+            placeholder="Name"
+          />
+            <input
+            type="text"
+            value={newSourceSlant}
+            onChange={(e) => setNewSourceSlant(e.target.value)}
+            placeholder="Slant (conservative, liberal, center)"
           />
           <button onClick={handleAddSource}>Add Source</button>
         </div>
