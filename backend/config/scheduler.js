@@ -3,37 +3,37 @@ import FeedParser from 'feedparser';
 import request from 'request';
 import { db } from './firebase.js';
 
-//categories for our RSS feeds
-const feeds = {
-  tech: [
-    'https://moxie.foxnews.com/google-publisher/tech.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
-  ],
-  politics: [
-    'https://moxie.foxnews.com/google-publisher/politics.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
-    'https://rss.politico.com/politics-news.xml',
-  ],
-  science: [
-    'https://moxie.foxnews.com/google-publisher/science.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
-  ],
-  health: [
-    'https://moxie.foxnews.com/google-publisher/health.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml',
-  ],
-  sports: [
-    'https://moxie.foxnews.com/google-publisher/sports.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml',
-  ],
-  travel: [
-    'https://moxie.foxnews.com/google-publisher/travel.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/Travel.xml', 
-  ],
-  general: [
-   'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
-  ]
-};
+// No longer used, refactored to store in FB sources collection
+// const feeds = {
+//   tech: [
+//     'https://moxie.foxnews.com/google-publisher/tech.xml',
+//     'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
+//   ],
+//   politics: [
+//     'https://moxie.foxnews.com/google-publisher/politics.xml',
+//     'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
+//     'https://rss.politico.com/politics-news.xml',
+//   ],
+//   science: [
+//     'https://moxie.foxnews.com/google-publisher/science.xml',
+//     'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
+//   ],
+//   health: [
+//     'https://moxie.foxnews.com/google-publisher/health.xml',
+//     'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml',
+//   ],
+//   sports: [
+//     'https://moxie.foxnews.com/google-publisher/sports.xml',
+//     'https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml',
+//   ],
+//   travel: [
+//     'https://moxie.foxnews.com/google-publisher/travel.xml',
+//     'https://rss.nytimes.com/services/xml/rss/nyt/Travel.xml', 
+//   ],
+//   general: [
+//    'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+//   ]
+// };
 
 const fetchAndStoreFeeds = async () => {
   const articlesSnapshot = await db.collection('articles').get();
@@ -44,7 +44,22 @@ const fetchAndStoreFeeds = async () => {
   let newArticlesCount = 0;
   let totalDuplicateCount = 0;
 
-  for (const [category, urls] of Object.entries(feeds)) {
+
+  const sourcesSnapshot = await db.collection('sources').get();
+  const sources = sourcesSnapshot.docs.map(doc => doc.data());
+
+  // groups sources by category
+  const groupedSources = sources.reduce((acc, source) => {
+    const { category, source: url } = source;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(url);
+    return acc;
+  }, {});
+
+  // loop through sources by category from firestore
+  for (const [category, urls] of Object.entries(groupedSources)) {
     for (const url of urls) {
       const { newArticles, duplicates } = await fetchFeed(url, category);
       newArticlesCount += newArticles;
