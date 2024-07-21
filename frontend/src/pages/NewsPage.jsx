@@ -6,6 +6,8 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
 import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import Poll from '../components/Poll.jsx';
+
 
 const NewsPage = () => {
   
@@ -324,68 +326,176 @@ const NewsPage = () => {
   };
 
   
-  return (
-    <div className="article-list">
-      <h1>News Articles</h1>
+//   return (
+//     <div className="article-list">
+//       <h1>News Articles</h1>
 
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Search articles by title..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-        />
-      </div>
-      <div className="filter-container">
+//       <div className="search-container">
+//         <input
+//           type="text"
+//           placeholder="Search articles by title..."
+//           value={searchQuery}
+//           onChange={handleSearchChange}
+//         />
+//       </div>
+//       <div className="filter-container">
+//       <label htmlFor="filter">Filter by: </label>
+//       <select id="filter" value={filter} onChange={handleFilterChange}>
+//         <option value="Relevance">Relevance</option>
+//         <option value="Most Popular" >Most Popular</option>
+//         <option value="Controversial">Controversial</option>
+//       </select>
+//     </div>
+//     {searchQuery ? (
+//         <div className="search-results">
+//           {filteredArticles.map((article, index) => (
+//             <div key={index} className="article-item">
+//               {user && isAdmin && (
+//                 <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+//                   Delete
+//                 </button>
+//               )}
+//               <h2>
+//                 <Link to={`/article/${article.id}`}>{article.title}</Link>
+//               </h2>
+//               <h3>{article.category}</h3>
+//               <div className="img-container">
+//                 <Link to={`/article/${article.id}`}>
+//                   <img src={article.imgUrl} alt={article.title} />
+//                 </Link>
+//               </div>
+//               <div className="article-meta">
+//                 <span>Published on: {article.published.toLocaleString()}</span>
+//                 <span>Likes: {article.likes || 0}</span>
+//                 <span>Dislikes: {article.dislikes || 0}</span>
+//                 <span>Quality Score: {article.qualityScore}</span>
+//                 <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+//               </div>
+//               <Link 
+//                 to={`/article/${article.id}`} // Example route path within FactStream
+//                 className="read-more"
+//               >
+//                 Read more
+//               </Link>
+//             </div>
+//           ))}
+//         </div>
+
+//         ) :currentArticles.map((article, index) => (
+//         <div key={index} className="article-item">
+//          {user && isAdmin && (
+//                <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+//                Delete
+//              </button>
+//           )}         <h2>
+//             <Link to={`/article/${article.id}`}>{article.title}</Link>
+//           </h2>
+//           <h3>{article.category}</h3>
+//           <div className="img-container">
+//             <Link to={`/article/${article.id}`}>
+//               <img src={article.imgUrl} alt={article.title} />
+//             </Link>
+//           </div>
+//           <div className="article-meta">
+//             <span>Published on: {article.published.toLocaleString()}</span>
+//             <span>Likes: {article.likes || 0}</span>
+//             <span>Dislikes: {article.dislikes || 0}</span>
+//             <span>Quality Score: {article.qualityScore}</span>
+//             <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+
+//           </div>
+//           <Link 
+//             to={`/article/${article.id}`} // Example route path within FactStream
+//             className="read-more"
+//           >
+//             Read more
+//           </Link>
+//         </div>
+//       ))}
+//       {showConfirm && (
+//         <div className="confirmation-dialog">
+//           <p>Are you sure you want to delete this article?</p>
+//           <button onClick={handleConfirmDelete} className="confirm-button">Yes</button>
+//           <button onClick={handleCancelDelete} className="cancel-button">No</button>
+//         </div>
+//       )}
+//       <div className="pagination">
+//         <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
+//         <span>Page {currentPage} of {totalPages}</span>
+//         <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+//       </div>
+//     </div>
+//   );
+// };
+
+return (
+  <div className="article-list">
+    <h1>News Articles</h1>
+
+    <div className="search-container">
+      <input
+        type="text"
+        placeholder="Search articles by title..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+      />
+    </div>
+
+    <div className="filter-container">
       <label htmlFor="filter">Filter by: </label>
       <select id="filter" value={filter} onChange={handleFilterChange}>
         <option value="Relevance">Relevance</option>
-        <option value="Most Popular" >Most Popular</option>
+        <option value="Most Popular">Most Popular</option>
         <option value="Controversial">Controversial</option>
       </select>
     </div>
+
+    {/* Include the Poll component */}
+    <Poll />
+
     {searchQuery ? (
-        <div className="search-results">
-          {filteredArticles.map((article, index) => (
-            <div key={index} className="article-item">
-              {user && isAdmin && (
-                <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
-                  Delete
-                </button>
-              )}
-              <h2>
-                <Link to={`/article/${article.id}`}>{article.title}</Link>
-              </h2>
-              <h3>{article.category}</h3>
-              <div className="img-container">
-                <Link to={`/article/${article.id}`}>
-                  <img src={article.imgUrl} alt={article.title} />
-                </Link>
-              </div>
-              <div className="article-meta">
-                <span>Published on: {article.published.toLocaleString()}</span>
-                <span>Likes: {article.likes || 0}</span>
-                <span>Dislikes: {article.dislikes || 0}</span>
-                <span>Quality Score: {article.qualityScore}</span>
-                <span>Relevance Score: {article.relevance.toFixed(2)}</span>
-              </div>
-              <Link 
-                to={`/article/${article.id}`} // Example route path within FactStream
-                className="read-more"
-              >
-                Read more
+      <div className="search-results">
+        {filteredArticles.map((article, index) => (
+          <div key={index} className="article-item">
+            {user && isAdmin && (
+              <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+                Delete
+              </button>
+            )}
+            <h2>
+              <Link to={`/article/${article.id}`}>{article.title}</Link>
+            </h2>
+            <h3>{article.category}</h3>
+            <div className="img-container">
+              <Link to={`/article/${article.id}`}>
+                <img src={article.imgUrl} alt={article.title} />
               </Link>
             </div>
-          ))}
-        </div>
-
-        ) :currentArticles.map((article, index) => (
+            <div className="article-meta">
+              <span>Published on: {article.published.toLocaleString()}</span>
+              <span>Likes: {article.likes || 0}</span>
+              <span>Dislikes: {article.dislikes || 0}</span>
+              <span>Quality Score: {article.qualityScore}</span>
+              <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+            </div>
+            <Link 
+              to={`/article/${article.id}`} // Example route path within FactStream
+              className="read-more"
+            >
+              Read more
+            </Link>
+          </div>
+        ))}
+      </div>
+    ) : (
+      currentArticles.map((article, index) => (
         <div key={index} className="article-item">
-         {user && isAdmin && (
-               <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
-               Delete
-             </button>
-          )}         <h2>
+          {user && isAdmin && (
+            <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+              Delete
+            </button>
+          )}
+          <h2>
             <Link to={`/article/${article.id}`}>{article.title}</Link>
           </h2>
           <h3>{article.category}</h3>
@@ -400,7 +510,6 @@ const NewsPage = () => {
             <span>Dislikes: {article.dislikes || 0}</span>
             <span>Quality Score: {article.qualityScore}</span>
             <span>Relevance Score: {article.relevance.toFixed(2)}</span>
-
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream
@@ -409,21 +518,24 @@ const NewsPage = () => {
             Read more
           </Link>
         </div>
-      ))}
-      {showConfirm && (
-        <div className="confirmation-dialog">
-          <p>Are you sure you want to delete this article?</p>
-          <button onClick={handleConfirmDelete} className="confirm-button">Yes</button>
-          <button onClick={handleCancelDelete} className="cancel-button">No</button>
-        </div>
-      )}
-      <div className="pagination">
-        <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
-        <span>Page {currentPage} of {totalPages}</span>
-        <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+      ))
+    )}
+
+    {showConfirm && (
+      <div className="confirmation-dialog">
+        <p>Are you sure you want to delete this article?</p>
+        <button onClick={handleConfirmDelete} className="confirm-button">Yes</button>
+        <button onClick={handleCancelDelete} className="cancel-button">No</button>
       </div>
+    )}
+
+    <div className="pagination">
+      <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
+      <span>Page {currentPage} of {totalPages}</span>
+      <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
     </div>
-  );
+  </div>
+);
 };
 
 export default NewsPage;

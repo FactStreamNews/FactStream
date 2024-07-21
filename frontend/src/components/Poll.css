@@ -1,0 +1,89 @@
+.poll-container {
+    text-align: center;
+    margin: 20px;
+  }
+  
+  .poll-button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .poll-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .poll-popup {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-top: 20px;
+  }
+  
+  .poll-option {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+  }
+  
+  .circle-button {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #007BFF;
+    background-color: white;
+    color: white;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .circle-button.selected {
+    background-color: #007BFF;
+    color: white;
+  }
+  
+  .circle-button:disabled {
+    cursor: not-allowed;
+    border-color: #cccccc;
+  }
+  
+  .option-text {
+    flex-grow: 1;
+    text-align: left;
+  }
+  
+  .poll-bar {
+    height: 10px;
+    background-color: #007BFF;
+    margin-left: 10px;
+    transition: width 0.3s;
+  }
+  
+  .poll-popup p {
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  
+  .submit-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+  }
+  
+  .submit-button:hover {
+    background-color: #218838;
+  }
+  
