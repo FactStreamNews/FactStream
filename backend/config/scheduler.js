@@ -50,7 +50,8 @@ const fetchAndStoreFeeds = async () => {
 
   // groups sources by category
   const groupedSources = sources.reduce((acc, source) => {
-    const { category, source: url } = source;
+    
+    const { category, url } = source;
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -58,9 +59,13 @@ const fetchAndStoreFeeds = async () => {
     return acc;
   }, {});
 
+  console.log('Grouped sources:', groupedSources);
+
   // loop through sources by category from firestore
   for (const [category, urls] of Object.entries(groupedSources)) {
     for (const url of urls) {
+      console.log(`Fetching feed for URL: ${url} under category: ${category}`);
+
       const { newArticles, duplicates } = await fetchFeed(url, category);
       newArticlesCount += newArticles;
       totalDuplicateCount += duplicates;
