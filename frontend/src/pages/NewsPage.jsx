@@ -20,7 +20,7 @@ const NewsPage = () => {
   const [articleToDelete, setArticleToDelete] = useState(null);
   const navigate = useNavigate();
   
-  const [filter, setFilter] = useState('Relevance'); 
+  const [filter, setFilter] = useState('Date'); 
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredArticles, setFilteredArticles] = useState([]);
@@ -113,7 +113,8 @@ const NewsPage = () => {
 
         deleteLowQualityArticles();
   
-        let sortedArticles = [];
+
+        let sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
         if (filter === 'Relevance') {
           sortedArticles = articlesWithFormattedDates.sort((a, b) => b.relevance - a.relevance);
@@ -121,6 +122,8 @@ const NewsPage = () => {
           sortedArticles = articlesWithFormattedDates.sort((a, b) => (b.likes || 0) - (a.likes || 0));
         } else if (filter === 'Controversial') {
           sortedArticles = articlesWithFormattedDates.sort((a, b) => (b.likes + b.dislikes) - (a.likes + a.dislikes));
+        } else if (filter == 'Date') {
+          sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
         }
   
         setArticles(sortedArticles);
@@ -317,12 +320,20 @@ const NewsPage = () => {
     const selected = e.target.value;
     setFilter(e.target.value);
 
-    if (selected === 'Most Popular'){
+    let sortedArticles = [...articles];
+
+    if (selected === 'Relevance') {
+       sortedArticles.sort((a, b) => b.relevance - a.relevance);
+     } else if (selected === 'Most Popular'){
       navigate('/popular');
     }
-    if (selected === 'Controversial') {
+    else if (selected === 'Controversial') {
       navigate('/controversial');
+    } else if (selected === 'Date') {
+      sortedArticles.sort((a, b) => b.published - a.published);
     }
+    setArticles(sortedArticles);
+
   };
 
 
@@ -335,7 +346,7 @@ return (
     <div className="filter-container">
       <label htmlFor="filter">Filter by: </label>
       <select id="filter" value={filter} onChange={handleFilterChange}>
-        <option value="Date">Date</option>
+        <option value="Date">Date</option> 
         <option value="Relevance">Relevance</option>
         <option value="Most Popular">Most Popular</option>
         <option value="Controversial">Controversial</option>
