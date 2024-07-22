@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
-import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collection, where, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
 import Poll from '../components/Poll.jsx';
 
@@ -19,7 +19,7 @@ const NewsPage = () => {
   const [showConfirm, setShowConfirm] = useState(false); 
   const [articleToDelete, setArticleToDelete] = useState(null);
   const navigate = useNavigate();
-  
+  const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState('Date'); 
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,12 +67,20 @@ const NewsPage = () => {
       article_score = externalLinks.length + 6;
     }
   
+    if (article_score == 6) {
+      const rando = Math.floor(Math.random()* 10) + 1;
+      if (rando > 5) {
+        article_score = 7;
+      }
+    }
+
     return article_score;
     
   };
   useEffect(() => {
     
     const fetchArticles = async () => {
+      setIsLoading(true);
       try {
         const response = await axios.get('/articles');
         const articlesWithFormattedDates = response.data.map(article => {
@@ -90,11 +98,13 @@ const NewsPage = () => {
         const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7 && !article.isRecovered);
         console.log(lowquality);
         const deleteLowQualityArticles = async () => {
+          const batch = writeBatch(db);
           for (const article of lowquality) {
             try {
-              const deleted = new Date().toLocaleString();
+              const deleted = new Date().toISOString();
+              const { id, ...articleWithoutId } = article;
               await addDoc(collection(db, 'deleted_articles'), {
-                ...article, 
+                ...articleWithoutId, 
                 deletedBy: 'Automatically',
                 reason: 'Quality',
                 deletedOn: deleted,
@@ -102,16 +112,23 @@ const NewsPage = () => {
               });
               console.log(`Article '${article.title}' deleted successfully`);
 
-              await deleteDoc(doc(db, 'articles', article.id));
-              setArticles(articles.filter(temparticle => temparticle.id !== article.id));
-              console.log('Article deleted successfully');
+              const articleRef = doc(db, 'articles', article.id);
+              batch.delete(articleRef);
+              
             } catch (error) {
               console.error(`Error deleting article '${article.title}':`, error);
             }
           }
+          try {
+            await batch.commit(); // Commit the batch write
+            setArticles(articles.filter(temparticle => !lowquality.some(lq => lq.id === temparticle.id)));
+            console.log('Batch delete completed successfully');
+          } catch (error) {
+            console.error('Error committing batch delete:', error);
+          }
         };
 
-        deleteLowQualityArticles();
+        await deleteLowQualityArticles();
   
 
         let sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
@@ -125,10 +142,28 @@ const NewsPage = () => {
         } else if (filter == 'Date') {
           sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
         }
-  
+        
+          /*let foxCount = 0;
+          let NYcount = 0;
+          let politico = 0;
+          for (let i = 0; i < sortedArticles.length; i++) {
+            if (sortedArticles[i].link.includes("foxnews")) {
+              foxCount++;
+            } else if (sortedArticles[i].link.includes("politico")) {
+              politico++;
+            } else if (sortedArticles[i].link.includes("nytimes")) {
+              NYcount++;
+            }
+          }
+          console.log("FOX:", foxCount);
+          console.log("Politico:", politico);
+          console.log("NYT:", NYcount);*/
+
         setArticles(sortedArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -337,119 +372,135 @@ const NewsPage = () => {
   };
 
 
-
-return (
-  <div className="article-list">
-    <h1>News Articles</h1>
-
-    <div className="search-filter-container"> 
-    <div className="filter-container">
-      <label htmlFor="filter">Filter by: </label>
-      <select id="filter" value={filter} onChange={handleFilterChange}>
-        <option value="Date">Date</option> 
-        <option value="Relevance">Relevance</option>
-        <option value="Most Popular">Most Popular</option>
-        <option value="Controversial">Controversial</option>
-      </select>
-    </div>
-
-    {/* Search bar moved inside search-filter-container */}
-    <div className="search-container">
-      <input
-        type="text"
-        placeholder="Search articles by title..."
-        value={searchQuery}
-        onChange={handleSearchChange}
-      />
-    </div>
-  </div>
-
-    {/* Include the Poll component */}
-    <Poll />
-
-    {searchQuery ? (
-      <div className="search-results">
-        {filteredArticles.map((article, index) => (
-          <div key={index} className="article-item">
-            {user && isAdmin && (
-              <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
-                Delete
-              </button>
-            )}
-            <h2>
-              <Link to={`/article/${article.id}`}>{article.title}</Link>
-            </h2>
-            <h3>{article.category}</h3>
-            <div className="img-container">
-              <Link to={`/article/${article.id}`}>
-                <img src={article.imgUrl} alt={article.title} />
-              </Link>
+  return (
+    <div className="article-list">
+      {isLoading ? (
+        <div className="loading">Deleting Articles...</div>
+      ) : (
+        <>
+          <h1>News Articles</h1>
+  
+          <div className="search-filter-container">
+            <div className="filter-container">
+              <label htmlFor="filter">Filter by: </label>
+              <select id="filter" value={filter} onChange={handleFilterChange}>
+                <option value="Date">Date</option>
+                <option value="Relevance">Relevance</option>
+                <option value="Most Popular">Most Popular</option>
+                <option value="Controversial">Controversial</option>
+              </select>
             </div>
-            <div className="article-meta">
-              <span>Published on: {article.published.toLocaleString()}</span>
-              <span>Likes: {article.likes || 0}</span>
-              <span>Dislikes: {article.dislikes || 0}</span>
-              <span>Quality Score: {article.qualityScore}</span>
-              <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+  
+            <div className="search-container">
+              <input
+                type="text"
+                placeholder="Search articles by title..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
             </div>
-            <Link 
-              to={`/article/${article.id}`} // Example route path within FactStream
-              className="read-more"
-            >
-              Read more
-            </Link>
           </div>
-        ))}
-      </div>
-    ) : (
-      currentArticles.map((article, index) => (
-        <div key={index} className="article-item">
-          {user && isAdmin && (
-            <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
-              Delete
-            </button>
+  
+          <Poll />
+  
+          {searchQuery ? (
+            <div className="search-results">
+              {filteredArticles.map((article, index) => (
+                <div key={index} className="article-item">
+                  {user && isAdmin && (
+                    <button
+                      onClick={() => handleDeleteClick(article)}
+                      color="inherit"
+                      className="delete-button"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <h2>
+                    <Link to={`/article/${article.id}`}>{article.title}</Link>
+                  </h2>
+                  <h3>{article.category}</h3>
+                  <div className="img-container">
+                    <Link to={`/article/${article.id}`}>
+                      <img src={article.imgUrl} alt={article.title} />
+                    </Link>
+                  </div>
+                  <div className="article-meta">
+                    <span>Published on: {article.published.toLocaleString()}</span>
+                    <span>Likes: {article.likes || 0}</span>
+                    <span>Dislikes: {article.dislikes || 0}</span>
+                    <span>Quality Score: {article.qualityScore}</span>
+                    <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+                  </div>
+                  <Link to={`/article/${article.id}`} className="read-more">
+                    Read more
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            currentArticles.map((article, index) => (
+              <div key={index} className="article-item">
+                {user && isAdmin && (
+                  <button
+                    onClick={() => handleDeleteClick(article)}
+                    color="inherit"
+                    className="delete-button"
+                  >
+                    Delete
+                  </button>
+                )}
+                <h2>
+                  <Link to={`/article/${article.id}`}>{article.title}</Link>
+                </h2>
+                <h3>{article.category}</h3>
+                <div className="img-container">
+                  <Link to={`/article/${article.id}`}>
+                    <img src={article.imgUrl} alt={article.title} />
+                  </Link>
+                </div>
+                <div className="article-meta">
+                  <span>Published on: {article.published.toLocaleString()}</span>
+                  <span>Likes: {article.likes || 0}</span>
+                  <span>Dislikes: {article.dislikes || 0}</span>
+                  <span>Quality Score: {article.qualityScore}</span>
+                  <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+                </div>
+                <Link to={`/article/${article.id}`} className="read-more">
+                  Read more
+                </Link>
+              </div>
+            ))
           )}
-          <h2>
-            <Link to={`/article/${article.id}`}>{article.title}</Link>
-          </h2>
-          <h3>{article.category}</h3>
-          <div className="img-container">
-            <Link to={`/article/${article.id}`}>
-              <img src={article.imgUrl} alt={article.title} />
-            </Link>
+  
+          {showConfirm && (
+            <div className="confirmation-dialog">
+              <p>Are you sure you want to delete this article?</p>
+              <button onClick={handleConfirmDelete} className="confirm-button">
+                Yes
+              </button>
+              <button onClick={handleCancelDelete} className="cancel-button">
+                No
+              </button>
+            </div>
+          )}
+  
+          <div className="pagination">
+            <button onClick={handlePreviousPage} disabled={currentPage === 1}>
+              Previous
+            </button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button onClick={handleNextPage} disabled={currentPage === totalPages}>
+              Next
+            </button>
           </div>
-          <div className="article-meta">
-            <span>Published on: {article.published.toLocaleString()}</span>
-            <span>Likes: {article.likes || 0}</span>
-            <span>Dislikes: {article.dislikes || 0}</span>
-            <span>Quality Score: {article.qualityScore}</span>
-            <span>Relevance Score: {article.relevance.toFixed(2)}</span>
-          </div>
-          <Link 
-            to={`/article/${article.id}`} // Example route path within FactStream
-            className="read-more"
-          >
-            Read more
-          </Link>
-        </div>
-      ))
-    )}
-
-    {showConfirm && (
-      <div className="confirmation-dialog">
-        <p>Are you sure you want to delete this article?</p>
-        <button onClick={handleConfirmDelete} className="confirm-button">Yes</button>
-        <button onClick={handleCancelDelete} className="cancel-button">No</button>
-      </div>
-    )}
-
-    <div className="pagination">
-      <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
-      <span>Page {currentPage} of {totalPages}</span>
-      <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+        </>
+      )}
     </div>
-  </div>
-);
+  );
+  
 };
 
 export default NewsPage;

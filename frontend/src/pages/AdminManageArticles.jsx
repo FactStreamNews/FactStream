@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, addDoc, query, where, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from '../firebase';
@@ -92,8 +92,32 @@ const AdminManageArticles = () => {
         try {
           const deletedArticlesCollection = collection(db, 'deleted_articles');
           const deletedArticlesSnapshot = await getDocs(deletedArticlesCollection);
-          const deletedArticlesList = deletedArticlesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setDeletedArticles(deletedArticlesList);
+          const deletedArticlesList = deletedArticlesSnapshot.docs.map(doc => {
+            const data = doc.data();
+            const deletedOnDate = data.deletedOn ? new Date(data.deletedOn) : null; // Convert ISO string to Date
+      
+            return {
+              id: doc.id,
+              ...data,
+              deletedOn: deletedOnDate
+            };
+          });
+          const sortedDeletedArticlesList = deletedArticlesList.sort((a, b) => b.deletedOn - a.deletedOn);
+
+          const article_number = deletedArticlesSnapshot.size;
+          console.log(article_number);
+          if (article_number > 100) {
+            console.log("here");
+            const articlesToDelete = sortedDeletedArticlesList.slice(100);
+            const batch = writeBatch(db);
+            articlesToDelete.forEach(article => {
+            const articleRef = doc(db, 'deleted_articles', article.id);
+            batch.delete(articleRef);
+            });
+            await batch.commit();
+            console.log(`Deleted ${articlesToDelete.length} articles.`);
+          }
+          setDeletedArticles(sortedDeletedArticlesList);
         } catch (error) {
           console.error('Error fetching deleted articles:', error);
         }
@@ -187,7 +211,7 @@ const AdminManageArticles = () => {
                 <tr key={article.id} onClick={() => handleRowClick(article)}>
                   <td>{article.title}</td>
                   <td>{article.category}</td>
-                  <td>{article.deletedOn ? article.deletedOn: 'Unknown'}</td>
+                  <td>{article.deletedOn ? article.deletedOn.toLocaleString() : 'Unknown'}</td>
                   <td>{article.deletedBy}</td>
                   <td>{article.reason}</td>
                 </tr>

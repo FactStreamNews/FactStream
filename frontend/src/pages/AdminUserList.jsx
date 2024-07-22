@@ -153,8 +153,6 @@ const AdminLandingPage = () => {
         {Object.entries(categoryCounts).map(([category, count]) => (
           <p key={category}>Total {category.charAt(0).toUpperCase() + category.slice(1)} Articles: {count}</p>
         ))}
-        <p>Total High Quality Articles: {highQualityCount}</p>
-        <p>Total Low Quality Articles: {lowQualityCount}</p>
       </div>
       <div className="admin-buttons">
         <button onClick={() => navigate('/admin/manage-users')}>Manage Users</button>
