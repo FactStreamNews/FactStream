@@ -6,6 +6,8 @@ import { db } from '../config/firebase.js';
 import './ArticlePage.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';
+import Modal from 'react-modal'; 
+import ReportArticleModal from '../components/ReportArticleModal';
 
 const ArticlePage = () => {
   const { id } = useParams();
@@ -21,7 +23,8 @@ const ArticlePage = () => {
   const [newComment, setNewComment] = useState(''); // new comment
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState("");
-
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
 
   const fetchUserName = async () => {
     try {
@@ -73,6 +76,31 @@ const ArticlePage = () => {
 
     fetchComments();
   }, [id]);
+
+
+  const handleReport = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert('Please sign in to report articles.');
+      return;
+    }
+    try {
+      const reportsRef = collection(db, 'reports');
+      await addDoc(reportsRef, {
+        userId: user.uid,
+        articleId: id,
+        reason: reportReason,
+        status: 'Pending',
+        createdAt: new Date()
+      });
+      setReportReason('');
+      setIsReportModalOpen(false);
+      alert('Report submitted successfully');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+    }
+  };
+
 
   // Handle addition of comments
   const handleAddComment = async (e) => {
@@ -356,6 +384,12 @@ const ArticlePage = () => {
           >
             {hasSaved ? 'Unsave' : 'Save'}
           </button>
+          <button onClick={() => setIsReportModalOpen(true)}>Report Article</button>
+            <ReportArticleModal 
+              isReportModalOpen={isReportModalOpen}
+              setIsReportModalOpen={setIsReportModalOpen}
+              handleReport={handleReport}
+            />
         </div>
 
         <div
@@ -399,6 +433,11 @@ const ArticlePage = () => {
           </div>
         ))}
       </div>
+      <ReportArticleModal 
+  isReportModalOpen={isReportModalOpen}
+  setIsReportModalOpen={setIsReportModalOpen}
+  handleReport={handleReport}
+/>
     </div>
   );
 };
