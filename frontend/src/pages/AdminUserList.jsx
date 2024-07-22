@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from '../firebase';
-import { deleteUser } from 'firebase/auth';
+
 import './AdminUserList.css';
 
-const AdminUserList = () => {
-  const [users, setUsers] = useState([]);
-  const [deletedArticles, setDeletedArticles] = useState([]);
+const AdminLandingPage = () => {
+  const [user, authLoading, authError] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [user, authLoading, authError] = useAuthState(auth);
-  const [currentPage, setCurrentPage] = useState(1);
-  const articlesPerPage = 10;
+  const [userCount, setUserCount] = useState(0);
+  const [articleCount, setArticleCount] = useState(0);
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const [highQualityCount, sethighQualityCount] = useState(0);
+  const [lowQualityCount, setlowQualityCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,66 +41,100 @@ const AdminUserList = () => {
     fetchAdminStatus();
   }, [user]);
 
-  const handleDelete = async (user) => {
-    if (window.confirm("Are you sure you want to delete this account? This action cannot be undone.")) {
-    try {
-      const q = query(collection(db, "users"), where("uid", "==", user.uid));
-      const doc1 = await getDocs(q);
-      console.log(doc1);
-      const docId = doc1.docs[0].id;
-      const userDocRef = doc(db, "users", docId);
-      await deleteDoc(userDocRef); // Delete user data from Firestore
-   //   await deleteUser(auth.user); // Delete user from Firebase Authentication
-      setUsers(prevUsers => prevUsers.filter(u => u.uid !== user.uid));
-      alert("Account deleted successfully");
-      navigate("/admin");
-    } catch (err) {
-      console.log(err)
-      //onsole.error(err);
-      alert(`An error occurred while deleting the account: ${err.message}`);
-    }
-  }
-  };
-
   useEffect(() => {
     if (loading || authLoading) return;
 
     if (!user || !isAdmin) {
       navigate('/'); // send to home page if non-admin trying to access
     } else {
-      const fetchUsers = async () => {
+      const fetchUserCount = async () => {
         try {
           const usersCollection = collection(db, 'users');
           const usersSnapshot = await getDocs(usersCollection);
-          const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setUsers(usersList);
+          setUserCount(usersSnapshot.size);
         } catch (error) {
-          console.error('Error fetching users:', error);
+          console.error('Error fetching user count:', error);
         }
       };
-
-
-      const fetchDeletedArticles = async () => {
+      const getScore = (htmlContent, articleLink) => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const links = doc.querySelectorAll('a[href^="http"]');
+        const host = new URL(articleLink);
+        const excludedHosts = ['twitter.com', 'instagram.com', 'linkedin.com'];
+    
+        const normalizeHost = (hostname) => hostname.replace(/^www\./, '');
+    
+        const normalizedHost = normalizeHost(host.hostname);
+    
+        const externalLinks = Array.from(links).filter(link => {
+          const url = new URL(link.href);
+          const linkHost = url.host;
+      
+          // Check if the link host is the same as the article host or is in the excluded list
+          if (linkHost === host.hostname || linkHost === normalizedHost || excludedHosts.includes(linkHost)) {
+            return false;
+          }
+      
+          return true;
+        });
+        let article_score = 0;
+        if (externalLinks.length > 4) {
+          const diff = externalLinks.length - 4;
+         // console.log(diff);
+          const factor = diff / 6;
+          article_score = 10 - factor;
+        } else {
+          article_score = externalLinks.length + 6;
+        }
+      
+        return article_score;
+        
+      };
+      const fetchArticleCount = async () => {
         try {
-          const deletedArticlesCollection = collection(db, 'deleted_articles');
-          const deletedArticlesSnapshot = await getDocs(deletedArticlesCollection);
-          const deletedArticlesList = deletedArticlesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setDeletedArticles(deletedArticlesList);
+          const articlesCollection = collection(db, 'articles');
+          const articlesSnapshot = await getDocs(articlesCollection);
+          setArticleCount(articlesSnapshot.size);
+          const response = await axios.get('/articles');
+          console.log(response);
+          const articlesWithScores = response.data.map(article => ({
+            ...article,
+            qualityScore: getScore(article.content, article.link)
+          }));
+          console.log(articlesWithScores);
+          const highquality = articlesWithScores.filter(article => article.qualityScore >= 7);
+          const lowquality = articlesWithScores.filter(article => article.qualityScore < 7);
+          console.log(lowquality);
+          sethighQualityCount(highquality.length);
+          setlowQualityCount(lowquality.length);
         } catch (error) {
-          console.error('Error fetching deleted articles:', error);
+          console.error('Error fetching article count:', error);
         }
       };
 
-      fetchUsers();
-      fetchDeletedArticles();
+      const fetchCategoryCounts = async () => {
+        const categories = ['tech', 'politics', 'science', 'health', 'sports', 'travel', 'general'];
+        const counts = {};
+        
+        try {
+          for (const category of categories) {
+            const articlesCollection = collection(db, 'articles');
+            const q = query(articlesCollection, where('category', '==', category));
+            const categorySnapshot = await getDocs(q);
+            counts[category] = categorySnapshot.size;
+          }
+          setCategoryCounts(counts);
+        } catch (error) {
+          console.error('Error fetching category counts:', error);
+        }
+      };
+
+      fetchUserCount();
+      fetchArticleCount();
+      fetchCategoryCounts();
     }
   }, [user, isAdmin, loading, authLoading, navigate]);
-
-  const indexOfLastArticle = currentPage * articlesPerPage;
-  const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
-  const currentArticles = deletedArticles.slice(indexOfFirstArticle, indexOfLastArticle);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   if (loading || authLoading) {
     return <div>Loading...</div>;
@@ -109,66 +145,23 @@ const AdminUserList = () => {
   }
 
   return (
-    <div className="admin-container">
-      <div className="admin-user-list">
-        <h1>Admin User List</h1>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Admin</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map(user => (
-              <tr key={user.id}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.is_admin ? 'ADMIN' : ''}</td>
-                <td>
-                  <button className="delete-button" onClick={() => handleDelete(user)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="admin-landing">
+      <h1>Admin Dashboard</h1>
+      <div className="stats">
+        <p>Total Users: {userCount}</p>
+        <p>Total Articles: {articleCount}</p>
+        {Object.entries(categoryCounts).map(([category, count]) => (
+          <p key={category}>Total {category.charAt(0).toUpperCase() + category.slice(1)} Articles: {count}</p>
+        ))}
+        <p>Total High Quality Articles: {highQualityCount}</p>
+        <p>Total Low Quality Articles: {lowQualityCount}</p>
       </div>
-      <div className="admin-deleted-articles">
-        <h1>Deleted Articles</h1>
-        {currentArticles.length === 0 ? (
-          <p>No deleted articles found.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Deleted On</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentArticles.map(article => (
-                <tr key={article.id}>
-                  <td>{article.title}</td>
-                  <td>{article.category}</td>
-                  <td>{article.deletedOn ? new Date(article.deletedOn.seconds * 1000).toLocaleString() : 'Unknown'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <div className="pagination">
-          {[...Array(Math.ceil(deletedArticles.length / articlesPerPage)).keys()].map(number => (
-            <button key={number + 1} onClick={() => paginate(number + 1)} className="pagination-button">
-              {number + 1}
-            </button>
-          ))}
-        </div>
+      <div className="admin-buttons">
+        <button onClick={() => navigate('/admin/manage-users')}>Manage Users</button>
+        <button onClick={() => navigate('/admin/manage-articles')}>Manage Articles</button>
       </div>
     </div>
   );
 };
 
-export default AdminUserList;
+export default AdminLandingPage;

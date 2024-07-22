@@ -13,12 +13,18 @@ import SportsPage from './pages/SportsPage';
 import SciencePage from './pages/SciencePage';
 import HealthPage from './pages/HealthPage';
 import TravelPage from './pages/TravelPage';
-import AdminUserList from './pages/AdminUserList';
+import AdminUserList from './pages/AdminManageUser';
 
 import {AuthProvider} from './contexts/AuthProvider';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import SavedArticles from './pages/SavedArticles';
+import UserProfile from './pages/UserProfile';
+import MyReports from './components/MyReports';
+import Popular from './pages/PopularPage';
+import AdminLandingPage from './pages/AdminUserList';
+import AdminManageArticles from './pages/AdminManageArticles';
+import Controversial from './pages/ControversialPage';
 
 const App = () => {
   //const [routes, setRoutes] = useState([]);
@@ -37,8 +43,15 @@ const App = () => {
     {path: '/science', component: SciencePage},
     {path: '/health', component: HealthPage}, 
     {path: '/travel', component: TravelPage},
-    {path: 'admin', component: AdminUserList},
-    { path: '/profile/:userId', component: Dashboard }  // Add this line
+    {path: 'admin', component: AdminLandingPage},
+    {path: 'admin/manage-users', component: AdminUserList},
+    {path: 'admin/manage-articles', component: AdminManageArticles},
+
+    { path: '/profile/:userId', component: UserProfile },  // Add this line
+    {path: '/userprofile', component: UserProfile}, 
+    {path: '/myreports', component: MyReports}, 
+    {path: '/popular', component: Popular},
+    {path: '/controversial', component: Controversial},
 ];
  
 return (

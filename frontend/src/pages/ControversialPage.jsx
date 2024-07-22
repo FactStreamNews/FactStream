@@ -4,39 +4,23 @@ import { Link } from 'react-router-dom';
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
-import { updateDoc, doc, arrayUnion, arrayRemove, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
-const NewsPage = () => {
+const ControversialPage = () => {
+  
   const [articles, setArticles] = useState([]);
   const [savedArticles, setSavedArticles] = useState([]);
   const [user, loading, error] = useAuthState(auth);
   const [isSaved, setIsSaved] = useState(false);
-
-  const countLinks = (htmlContent, articleLink) => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    const links = doc.querySelectorAll('a[href^="http"]');
-    const host = new URL(articleLink);
-    const externalLinks = Array.from(links).filter(link => {
-      const url = new URL(link.href);
-      return url.host !== host.hostname;
-    });
-
-    let article_score = 0;
-    if (externalLinks.length > 4) {
-      const diff = externalLinks.length - 4;
-     // console.log(diff);
-      const factor = diff / 2;
-      article_score = 10 - factor;
-    } else {
-      article_score = externalLinks.length + 6;
-    }
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false); 
+  const [articleToDelete, setArticleToDelete] = useState(null);
   
-    return article_score;
-    
-  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const articlesPerPage = 10;
   useEffect(() => {
+    
     const fetchArticles = async () => {
       try {
         const response = await axios.get('/articles');
@@ -45,22 +29,59 @@ const NewsPage = () => {
           published: article.published && article.published._seconds 
             ? new Date(article.published._seconds * 1000)
             : 'Unknown',
-            qualityScore: countLinks(article.content, article.link)
+          likes: article.likes || 0,
+          dislikes: article.dislikes || 0,
+          totalLikes: (article.likes || 0) - (article.dislikes || 0)
         }));
-        const healthArticles = articlesWithFormattedDates.filter(articlesWithFormattedDates => articlesWithFormattedDates.category === "health");
-        console.log(healthArticles);
 
-        // sort articles by date
-       // const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
-        setArticles(healthArticles);
+      
+        // sort articles by likes
+        const sortedArticles = articlesWithFormattedDates.sort((a, b) => {
+            if (a.totalLikes < 0 && b.totalLikes < 0) {
+              return a.totalLikes - b.totalLikes; // Sort by totalLikes ascending
+            } else if (a.totalLikes === 0 && b.totalLikes === 0) {
+              return b.published - a.published; // Sort by date descending
+            } else if (a.totalLikes === 0 || b.totalLikes === 0) {
+              return a.totalLikes - b.totalLikes; // Ensure totalLikes 0 are sorted appropriately
+            } else {
+              return a.totalLikes - b.totalLikes; // Sort by totalLikes ascending
+            }
+          });
+          console.log(sortedArticles);
+       const topArticles = sortedArticles.slice(0,10);
+        setArticles(topArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
       }
     };
+    const fetchAdminStatus = async () => {
+      if (user) {
+        console.log(`Fetching admin status for user: ${user.uid}`);
+        
+        // Query to find the document with the uid field
+        const q = query(collection(db, 'users'), where('uid', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        const doc1 = await getDocs(q);
+        const data = doc1.docs[0].data();
+        const docID = doc1.docs[0].id;
+        const docRef = doc(db, "users", docID);
+
+    
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          console.log(`User data: ${JSON.stringify(userDoc.data())}`);
+          setIsAdmin(userDoc.data().is_admin || false);
+        } else {
+          console.log('No such document!');
+        }
+      }
+    };
+
+    fetchAdminStatus();
 
     fetchArticles();
-  }, []);
+  }, [user, loading]);
 
   useEffect(() => {
     if (user) {
@@ -78,6 +99,37 @@ const NewsPage = () => {
       fetchSavedArticles();
     }
   }, [user]);
+
+
+   const handleDeleteClick = (article) => {
+    setArticleToDelete(article);
+    setShowConfirm(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowConfirm(false);
+    setArticleToDelete(null);
+  };
+
+  // delete article for admin use
+  const handleConfirmDelete = async () => {
+    if (articleToDelete) {
+      try {
+        // Add the article to deleted_articles collection
+        await addDoc(collection(db, 'deleted_articles'), articleToDelete);
+        
+        // Delete the article from articles collection
+        await deleteDoc(doc(db, 'articles', articleToDelete.id));
+        setArticles(articles.filter(article => article.id !== articleToDelete.id));
+        console.log('Article deleted successfully');
+      } catch (error) {
+        console.error('Error deleting article:', error);
+      } finally {
+        setShowConfirm(false);
+        setArticleToDelete(null);
+      }
+    }
+  };
 
   
  /* const toggleSave = (index) => {
@@ -146,13 +198,30 @@ const NewsPage = () => {
     return isSaved;
   };
 
+  const indexOfLastArticle = currentPage * articlesPerPage;
+  const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
+  const currentArticles = articles.slice(indexOfFirstArticle, indexOfLastArticle);
+
+  const totalPages = Math.ceil(articles.length / articlesPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage(prevPage => Math.min(prevPage + 1, totalPages));
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prevPage => Math.max(prevPage - 1, 1));
+  };
 
   return (
     <div className="article-list">
-      <h1>Health</h1>
-      {articles.map((article, index) => (
+      <h1>Controversial</h1>
+      {currentArticles.map((article, index) => (
         <div key={index} className="article-item">
-          <h2>
+         {user && isAdmin && (
+               <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+               Delete
+             </button>
+          )}         <h2>
             <Link to={`/article/${article.id}`}>{article.title}</Link>
           </h2>
           <h3>{article.category}</h3>
@@ -165,7 +234,6 @@ const NewsPage = () => {
             <span>Published on: {article.published.toLocaleString()}</span>
             <span>Likes: {article.likes || 0}</span>
             <span>Dislikes: {article.dislikes || 0}</span>
-            <span>Quality Score: {article.qualityScore}</span>
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream
@@ -175,8 +243,15 @@ const NewsPage = () => {
           </Link>
         </div>
       ))}
+      {showConfirm && (
+        <div className="confirmation-dialog">
+          <p>Are you sure you want to delete this article?</p>
+          <button onClick={handleConfirmDelete} className="confirm-button">Yes</button>
+          <button onClick={handleCancelDelete} className="cancel-button">No</button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default NewsPage;
+export default ControversialPage;

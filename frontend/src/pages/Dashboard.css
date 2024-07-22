@@ -17,34 +17,37 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
 
-.dashboard__btn {
+.dashboard__btn,
+.dashboard__btn2,
+.dashboard__btn3,
+.dashboard__btn-small {
   padding: 12px 20px; /* Increased padding for a better look */
   font-size: 18px;
   margin-top: 15px; /* Increased margin for more spacing */
   border: none;
   color: white;
-  background-color: #007bff; /* Bootstrap primary color */
+  background-color: orange; /* Bootstrap primary color */
   border-radius: 5px; /* Rounded corners for buttons */
   transition: background-color 0.3s ease; /* Smooth transition for hover effect */
 }
 
-.dashboard__btn:hover {
-  background-color: #0056b3; /* Darker shade for hover effect */
+.dashboard__btn-small {
+  font-size: 14px; /* Slightly smaller font size for smaller button */
+}
+
+.report-btn {
+  margin-left: 100px; /* Adjust this value to control the horizontal shift */
+}
+
+.dashboard__btn:hover,
+.dashboard__btn2:hover,
+.dashboard__btn3:hover,
+.dashboard__btn-small:hover {
+  background-color: darkorange; /* Darker shade for hover effect */
 }
 
 .dashboard div {
   margin-top: 10px; /* Increased margin for better spacing */
   color: #333; /* Darker text color for better readability */
   font-size: 16px; /* Slightly larger font size */
-}
-
-.dashboard__btn2 {
-  padding: 8px 8px; /* Increased padding for a better look */
-  font-size: 12px;
-  margin-top: 15px; /* Increased margin for more spacing */
-  border: none;
-  color: white;
-  background-color: #007bff; /* Bootstrap primary color */
-  border-radius: 5px; /* Rounded corners for buttons */
-  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
 }

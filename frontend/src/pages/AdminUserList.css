@@ -1,52 +1,155 @@
-/* src/pages/AdminUserList.css */
+/* AdminUserList.css */
+
+.admin-landing {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-landing h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 2em;
+  color: #333;
+}
+
+.stats {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stats p {
+  margin: 10px 0;
+  font-size: 1.2em;
+  color: #666;
+}
+
+.admin-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.admin-buttons button {
+  padding: 10px 20px;
+  font-size: 1em;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.admin-buttons button:hover {
+  background-color: #0056b3;
+}
+
+
+/** Manage articles sec **/
+
 .admin-container {
-    display: flex;
-    justify-content: space-between;
-    padding: 20px;
-  }
-  
-  .admin-user-list,
-  .admin-deleted-articles {
-    width: 48%;
-  }
-  
-  .admin-user-list table,
-  .admin-deleted-articles table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .admin-user-list th,
-  .admin-user-list td,
-  .admin-deleted-articles th,
-  .admin-deleted-articles td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-  
-  .admin-user-list th,
-  .admin-deleted-articles th {
-    background-color: #f2f2f2;
-    text-align: left;
-  }
-  
-  .pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-  
-  .pagination-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    margin: 0 5px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  .pagination-button:hover {
-    background-color: #0056b3;
-  }
-  
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 2em;
+  color: #333;
+}
+
+.admin-deleted-articles {
+  margin-bottom: 40px;
+}
+
+.admin-deleted-articles table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.admin-deleted-articles th,
+.admin-deleted-articles td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.admin-deleted-articles th {
+  background-color: #007bff;
+  color: white;
+}
+
+.admin-deleted-articles tr:hover {
+  background-color: #f1f1f1;
+}
+
+.pagination {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.pagination-button {
+  padding: 10px 15px;
+  margin: 0 5px;
+  font-size: 1em;
+  color: #007bff;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pagination-button:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  width: 50%;
+  height: 25%;
+  overflow: auto;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  width: 100%;
+  height: 70%;
+  max-width: 600px;
+  position: relative;
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}

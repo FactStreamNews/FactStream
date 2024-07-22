@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./Dashboard.css";
 import { auth, db, logout } from "../firebase";
 import { updateEmail, updatePassword, deleteUser } from "firebase/auth";
@@ -9,6 +9,7 @@ import { doc, deleteDoc } from "firebase/firestore";
 import PreferencesModal from "../components/PreferencesModal";
 
 function Dashboard() {
+  const { userId } = useParams(); // Access userId from URL parameter
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState("");
   const [profilePicture, setProfilePicture] = useState(""); // New state for profile picture URL
@@ -25,7 +26,7 @@ function Dashboard() {
 
   const fetchUserName = async () => {
     try {
-      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+      const q = query(collection(db, "users"), where("uid", "==", userId));
       const doc = await getDocs(q);
       const data = doc.docs[0].data();
       const newPreferences = [];
@@ -50,9 +51,7 @@ function Dashboard() {
       setName(data.name);
       setProfilePicture(data.profilePictureUrl); // Set profile picture URL
       setPreferences(newPreferences);
-      const priv = data.is_private;
-      console.log(priv);
-      setIsPublic(!priv);
+      setEmail(data.email);
     } catch (err) {
       console.error(err);
       alert("An error occured while fetching user data");
@@ -60,10 +59,10 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    //const savedIsPublic = localStorage.getItem("isPublic");
-   // if (savedIsPublic !== null) {
-  //    setIsPublic(JSON.parse(savedIsPublic));
-   // }
+    const savedIsPublic = localStorage.getItem("isPublic");
+    if (savedIsPublic !== null) {
+      setIsPublic(JSON.parse(savedIsPublic));
+    }
     if (loading) return;
     if (!user) return navigate("/");
     fetchUserName();
@@ -195,46 +194,15 @@ function Dashboard() {
   
   return (
     <div>
-      <h1>Welcome {name}</h1>
-      <p>Please upload a profile picture before the Choose File button.</p>
-      {profilePicture && <img src={profilePicture} alt="Profile" />}
-      <input type="file" onChange={handleProfilePictureUpload} />
-      <button className="dashboard__btn-small" onClick={handleSaveProfile}>Save</button>
+      <h1>{name}</h1>
       {/* Other UI elements */}
       <div>
-        <label>Email: {user?.email}     </label>
-        {editingName ? (
-          <div>
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Enter new name"
-            />
-            <button className="dashboard__btn2" onClick={handleNameUpdate}>Save</button>
-          </div>
-        ) : (
-          <button className="dashboard__btn2" onClick={handleNameEdit}>Edit Name</button>
-        )}
-        <div>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Enter new password"
-          />
-          <button className="dashboard__btn2" onClick={handleUpdatePassword} disabled={updating}>
-            {updating ? "Updating..." : "Update Password"}
-          </button>
-        </div>
+        <label>Email: {email}</label>
+        
       </div>
       <div>
         <h2>Profile Settings</h2>
-        <p>Your profile is {isPublic ? 'public' : 'private'}.</p>
-        <button className="dashboard__btn-small" onClick={togglePrivacy}>
-          {isPublic ? 'Make Private' : 'Make Public'}
-        </button>
-        <Link to="/myreports" className="dashboard__btn-small report-btn">My Reports</Link>
+        <p>{name}'s profile is {isPublic ? 'public' : 'private'}.</p>
       </div>
       <PreferencesModal
         isOpen={isModalOpen}
@@ -242,7 +210,7 @@ function Dashboard() {
         onSave={handleSavePreferences}
       />
       <div>
-        <h2>Your Preferences</h2>
+        <h2>{name}'s Preferences</h2>
         {preferences.length > 0 ? (
           <ul>
             {preferences.map((preference, index) => (
@@ -250,20 +218,9 @@ function Dashboard() {
             ))}
           </ul>
         ) : (
-          <p>You have not set any preferences yet.</p>
+          <p>{name} has not set any preferences yet.</p>
         )}
-        <button className="dashboard__btn" onClick={handleOpenModal}>
-          Set Preferences
-        </button>
       </div>
-      <div>
-          <button className="dashboard__btn" onClick={logout}>
-            Logout
-          </button>
-          <button className="dashboard__btn" onClick={handleDeleteUser}>
-        Delete Account
-      </button>
-        </div>
     </div>
   );
 }
