@@ -22,6 +22,7 @@ function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
   const [isPublic, setIsPublic] = useState(true); // State to manage profile visibility
   const [preferences, setPreferences] = useState([]);
+  const [activity, setActivity] = useState([]); // State to manage user activity
 
   const fetchUserName = async () => {
     try {
@@ -29,22 +30,22 @@ function Dashboard() {
       const doc = await getDocs(q);
       const data = doc.docs[0].data();
       const newPreferences = [];
-      if(data.sciencePreference == true){
+      if (data.sciencePreference === true) {
         newPreferences.push("Science");
-      } 
-      if (data.politicsPreference == true){
+      }
+      if (data.politicsPreference === true) {
         newPreferences.push("Politics");
       }
-      if (data.healthPreference == true){
+      if (data.healthPreference === true) {
         newPreferences.push("Health");
       }
-      if (data.techPreference == true) {
+      if (data.techPreference === true) {
         newPreferences.push("Tech");
       }
-      if (data.sportsPreference == true) {
+      if (data.sportsPreference === true) {
         newPreferences.push("Sports");
       }
-      if (data.travelPreference == true) {
+      if (data.travelPreference === true) {
         newPreferences.push("Travel");
       }
       setName(data.name);
@@ -55,18 +56,27 @@ function Dashboard() {
       setIsPublic(!priv);
     } catch (err) {
       console.error(err);
-      alert("An error occured while fetching user data");
+      alert("An error occurred while fetching user data");
+    }
+  };
+
+  const fetchUserActivity = async () => {
+    try {
+      const q = query(collection(db, "activity"), where("userId", "==", user?.uid));
+      const activitySnapshot = await getDocs(q);
+      const activityList = activitySnapshot.docs.map(doc => doc.data());
+      setActivity(activityList);
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while fetching user activity");
     }
   };
 
   useEffect(() => {
-    //const savedIsPublic = localStorage.getItem("isPublic");
-   // if (savedIsPublic !== null) {
-  //    setIsPublic(JSON.parse(savedIsPublic));
-   // }
     if (loading) return;
     if (!user) return navigate("/");
     fetchUserName();
+    fetchUserActivity(); // Fetch user activity on component mount
   }, [user, loading]);
 
   const handleEditClick = () => {
@@ -157,7 +167,6 @@ function Dashboard() {
 
   const handleSavePreferences = (selectedCategories) => {
     console.log('Selected categories:', selectedCategories);
-    //window.location.reload();
     // Save the selected categories to the user's profile in firebase
   };
 
@@ -167,19 +176,18 @@ function Dashboard() {
     setIsPublic(newIsPublic);
     localStorage.setItem("isPublic", JSON.stringify(newIsPublic));
     try {
-    const q = query(collection(db, "users"), where("uid", "==", user?.uid));
-    const doc1 = await getDocs(q);
-    const data = doc1.docs[0].id;
-    const userDocRef = doc(db, "users", data);
-    await updateDoc(userDocRef, {
-      is_private: !newIsPublic
-    });
-    alert(`Profile is now ${newIsPublic ? "public" : "private"}`);
-  } catch (err){
-    console.error(err);
-    alert(`An error occurred while updating privacy settings: ${err.message}`);
-  }
-    
+      const q = query(collection(db, "users"), where("uid", "==", user?.uid));
+      const doc1 = await getDocs(q);
+      const data = doc1.docs[0].id;
+      const userDocRef = doc(db, "users", data);
+      await updateDoc(userDocRef, {
+        is_private: !newIsPublic
+      });
+      alert(`Profile is now ${newIsPublic ? "public" : "private"}`);
+    } catch (err) {
+      console.error(err);
+      alert(`An error occurred while updating privacy settings: ${err.message}`);
+    }
   };
 
   const handleProfilePictureUpload = async (event) => {
@@ -192,7 +200,7 @@ function Dashboard() {
     // Save any other profile changes (e.g., name, bio) if needed
     alert("Profile changes saved successfully!");
   };
-  
+
   return (
     <div>
       <h1>Welcome {name}</h1>
@@ -257,13 +265,25 @@ function Dashboard() {
         </button>
       </div>
       <div>
-          <button className="dashboard__btn" onClick={logout}>
-            Logout
-          </button>
-          <button className="dashboard__btn" onClick={handleDeleteUser}>
-        Delete Account
-      </button>
-        </div>
+        <h2>Past User Activity</h2>
+        {activity.length > 0 ? (
+          <ul>
+            {activity.map((act, index) => (
+              <li key={index}>{act.description}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>No past activity found.</p>
+        )}
+      </div>
+      <div>
+        <button className="dashboard__btn" onClick={logout}>
+          Logout
+        </button>
+        <button className="dashboard__btn" onClick={handleDeleteUser}>
+          Delete Account
+        </button>
+      </div>
     </div>
   );
 }
