@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import './ArticleList.css';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase'; 
-import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collection, where, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
 import Poll from '../components/Poll.jsx';
 
@@ -19,7 +19,7 @@ const NewsPage = () => {
   const [showConfirm, setShowConfirm] = useState(false); 
   const [articleToDelete, setArticleToDelete] = useState(null);
   const navigate = useNavigate();
-  
+  const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState('Date'); 
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,12 +67,19 @@ const NewsPage = () => {
       article_score = externalLinks.length + 6;
     }
   
+    if (article_score == 6) {
+      const rando = Math.floor(Math.random()* 10) + 1;
+      if (rando > 5) {
+        article_score = 7;
+      }
+    }
     return article_score;
     
   };
   useEffect(() => {
     
     const fetchArticles = async () => {
+      setIsLoading(true);
       try {
         const response = await axios.get('/articles');
         const articlesWithFormattedDates = response.data.map(article => {
@@ -93,11 +100,13 @@ const NewsPage = () => {
         const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7 && !article.isRecovered);
         console.log(lowquality);
         const deleteLowQualityArticles = async () => {
+          const batch = writeBatch(db);
           for (const article of lowquality) {
             try {
-              const deleted = new Date().toLocaleString();
+              const deleted = new Date().toISOString();
+              const { id, ...articleWithoutId } = article;
               await addDoc(collection(db, 'deleted_articles'), {
-                ...article, 
+                ...articleWithoutId, 
                 deletedBy: 'Automatically',
                 reason: 'Quality',
                 deletedOn: deleted,
@@ -105,16 +114,22 @@ const NewsPage = () => {
               });
               console.log(`Article '${article.title}' deleted successfully`);
 
-              await deleteDoc(doc(db, 'articles', article.id));
-              setArticles(articles.filter(temparticle => temparticle.id !== article.id));
-              console.log('Article deleted successfully');
+              const articleRef = doc(db, 'articles', article.id);
+              batch.delete(articleRef);
             } catch (error) {
               console.error(`Error deleting article '${article.title}':`, error);
             }
           }
+          try {
+            await batch.commit(); // Commit the batch write
+            setArticles(articles.filter(temparticle => !lowquality.some(lq => lq.id === temparticle.id)));
+            console.log('Batch delete completed successfully');
+          } catch (error) {
+            console.error('Error committing batch delete:', error);
+          }
         };
 
-        deleteLowQualityArticles();
+        await deleteLowQualityArticles();
   
 
         let sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
@@ -132,6 +147,8 @@ const NewsPage = () => {
         setArticles(sortedArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -338,8 +355,8 @@ const NewsPage = () => {
           return b.totalLikes - a.totalLikes; // Sort by likes descending
         }
       });
-    let topArticles = sortedArticles.slice(0,10);
-    setArticles(topArticles);
+   // let topArticles = sortedArticles.slice(0,10);
+    setArticles(sortedArticles);
     }
     else if (selected === 'Controversial') {
       sortedArticles.sort((a, b) => {
@@ -353,8 +370,8 @@ const NewsPage = () => {
           return a.totalLikes - b.totalLikes; // Sort by totalLikes ascending
         }
       });
-    let topArticles = sortedArticles.slice(0,10);
-    setArticles(topArticles);
+   // let topArticles = sortedArticles.slice(0,10);
+    setArticles(sortedArticles);
     } else if (selected === 'Date') {
       sortedArticles.sort((a, b) => b.published - a.published);
       setArticles(sortedArticles);
@@ -365,6 +382,10 @@ const NewsPage = () => {
 
 return (
   <div className="article-list">
+    {isLoading ? (
+      <div className="loading">Loading...</div>
+    ) : (
+      <>
     <h1>News Articles</h1>
 
     <div className="search-filter-container"> 
@@ -473,6 +494,8 @@ return (
       <span>Page {currentPage} of {totalPages}</span>
       <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
     </div>
+    </>
+      )}
   </div>
 );
 };
