@@ -10,6 +10,7 @@ import { db } from '../firebase';
 const NewsPage = () => {
   const [articles, setArticles] = useState([]);
   const [savedArticles, setSavedArticles] = useState([]);
+  const [filteredArticles, setFilteredArticles] = useState([]);
   const [user, loading, error] = useAuthState(auth);
   const [isSaved, setIsSaved] = useState(false);
   const [filter, setFilter] = useState("Blank");
@@ -57,6 +58,7 @@ const NewsPage = () => {
        // const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
         setArticles(politicsArticles);
+        setFilteredArticles(politicsArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
       }
@@ -152,12 +154,16 @@ const NewsPage = () => {
   const handleFilterChange = (e) => {
     const selected = e.target.value;
     setFilter(e.target.value);
+    let sortedArticles = [...articles];
 
     if (selected == "Conservative") {
-      console.log("CONSERVATIVIE");
+      sortedArticles = sortedArticles.filter(article => article.source && article.source == "fox");
     } else if (selected == "Liberal") {
-      console.log("LIBERAL");
+      sortedArticles = sortedArticles.filter(article => article.source && (article.source === "politico" || article.source === "nyt"));
+    } else if (selected == "Blank"){
+      sortedArticles = [...articles];
     }
+    setFilteredArticles(sortedArticles);
   };
 
   return (
@@ -173,7 +179,7 @@ const NewsPage = () => {
           </select>
         </div>
       </div>
-      {articles.map((article, index) => (
+      {filteredArticles.map((article, index) => (
         <div key={index} className="article-item">
           <h2>
             <Link to={`/article/${article.id}`}>{article.title}</Link>
