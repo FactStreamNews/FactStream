@@ -35,7 +35,7 @@ const NewsPage = () => {
   };
 
 
-  const countLinks = (htmlContent, articleLink) => {
+  const countLinks = (htmlContent, articleLink, source) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
     const links = doc.querySelectorAll('a[href^="http"]');
@@ -69,8 +69,14 @@ const NewsPage = () => {
   
     if (article_score == 6) {
       const rando = Math.floor(Math.random()* 10) + 1;
-      if (rando > 5) {
-        article_score = 7;
+      if (source === "nyt" || source === "politico") {
+        if (rando > 2) {
+          article_score = 7;
+        }
+      } else {
+        if (rando > 5) {
+          article_score = 7;
+        }
       }
     }
     return article_score;
@@ -88,7 +94,7 @@ const NewsPage = () => {
           return {
             ...article,
             published: publishedDate,
-            qualityScore: countLinks(article.content, article.link),
+            qualityScore: countLinks(article.content, article.link, article.source),
             relevance: calculateRelevance(article.likes || 0, article.dislikes || 0, publishedTimestamp),
             likes: article.likes || 0,
             dislikes: article.dislikes || 0,
