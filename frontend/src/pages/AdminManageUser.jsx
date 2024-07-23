@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from '../firebase';
@@ -37,23 +37,44 @@ const AdminUserList = () => {
 
   const handleDelete = async (user) => {
     if (window.confirm("Are you sure you want to delete this account? This action cannot be undone.")) {
+      try {
+        const q = query(collection(db, "users"), where("uid", "==", user.uid));
+        const doc1 = await getDocs(q);
+        console.log(doc1);
+        const docId = doc1.docs[0].id;
+        const userDocRef = doc(db, "users", docId);
+        await deleteDoc(userDocRef); 
+        //   await deleteUser(auth.user); // Delete user from Firebase Authentication
+        setUsers(prevUsers => prevUsers.filter(u => u.uid !== user.uid));
+        alert("Account deleted successfully");
+        navigate("/admin");
+      } catch (err) {
+        console.log(err)
+        //onsole.error(err);
+        alert(`An error occurred while deleting the account: ${err.message}`);
+      }
+    }
+  };
+
+  const handleMakeAdmin = async (user) => {
     try {
       const q = query(collection(db, "users"), where("uid", "==", user.uid));
-      const doc1 = await getDocs(q);
-      console.log(doc1);
-      const docId = doc1.docs[0].id;
-      const userDocRef = doc(db, "users", docId);
-      await deleteDoc(userDocRef); 
-   //   await deleteUser(auth.user); // Delete user from Firebase Authentication
-      setUsers(prevUsers => prevUsers.filter(u => u.uid !== user.uid));
-      alert("Account deleted successfully");
-      navigate("/admin");
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        const userDocRef = doc(db, "users", userDoc.id);
+        await updateDoc(userDocRef, { is_admin: true });
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u.uid === user.uid ? { ...u, is_admin: true } : u
+          )
+        );
+        alert("User updated to admin successfully");
+      }
     } catch (err) {
-      console.log(err)
-      //onsole.error(err);
-      alert(`An error occurred while deleting the account: ${err.message}`);
+      console.error(err);
+      alert(`An error occurred while updating the user's admin status: ${err.message}`);
     }
-  }
   };
 
   useEffect(() => {
@@ -107,6 +128,7 @@ const AdminUserList = () => {
               <td>{user.is_private ? 'Yes' : 'No'}</td>
               <td>
                 <button className="delete-button" onClick={() => handleDelete(user)}>Delete</button>
+                <button className="make-admin-button" onClick={() => handleMakeAdmin(user)}>Make Admin</button>
               </td>
             </tr>
           ))}
