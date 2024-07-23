@@ -223,11 +223,18 @@ const NewsPage = () => {
       setFilteredArticles([]);
       return;
     }
+    if (query.startsWith("source:")) {
+      const sourceName = query.split("source:")[1].trim().toLowerCase();
+      const filteredBySource = articles.filter(article => article.source.includes(sourceName));
+      console.log(sourceName)
+      setFilteredArticles(filteredBySource);
+    } else {
   
     const filtered = articles.filter(article => 
-      article.title.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredArticles(filtered);
+      article.title.toLowerCase().includes(query.toLowerCase()));
+      setFilteredArticles(filtered);
+
+  }
   };
   
 
