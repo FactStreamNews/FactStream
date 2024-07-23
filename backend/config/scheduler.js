@@ -55,7 +55,7 @@ const fetchAndStoreFeeds = async () => {
     if (!acc[category]) {
       acc[category] = [];
     }
-    acc[category].push(url);
+    acc[category].push({url, sourceName: source.name || url});
     return acc;
   }, {});
 
@@ -63,10 +63,10 @@ const fetchAndStoreFeeds = async () => {
 
   // loop through sources by category from firestore
   for (const [category, urls] of Object.entries(groupedSources)) {
-    for (const url of urls) {
+    for (const {url, sourceName} of urls) {
       console.log(`Fetching feed for URL: ${url} under category: ${category}`);
 
-      const { newArticles, duplicates } = await fetchFeed(url, category);
+      const { newArticles, duplicates } = await fetchFeed(url, category, sourceName);
       newArticlesCount += newArticles;
       totalDuplicateCount += duplicates;
     }
@@ -92,7 +92,7 @@ const fetchAndStoreFeeds = async () => {
   
 };
 
-const fetchFeed = async (feedUrl, category) => {
+const fetchFeed = async (feedUrl, category, sourceName) => {
   const req = request(feedUrl);
   const feedparser = new FeedParser();
   let newArticlesCount = 0;
@@ -156,7 +156,8 @@ const fetchFeed = async (feedUrl, category) => {
         published: item.pubDate ? item.pubDate : new Date(),
         content: item.description || '',
         imgUrl: imageUrl,
-        category: category
+        category: category, 
+        source: sourceName
       });
 
       newArticlesCount++;

@@ -117,7 +117,9 @@ const AdminManageArticles = () => {
             await batch.commit();
             console.log(`Deleted ${articlesToDelete.length} articles.`);
           }
-          setDeletedArticles(sortedDeletedArticlesList);
+          const mostrecent = sortedDeletedArticlesList.slice(0, 50);
+          setDeletedArticles(mostrecent);
+          console.log(mostrecent.length);
         } catch (error) {
           console.error('Error fetching deleted articles:', error);
         }

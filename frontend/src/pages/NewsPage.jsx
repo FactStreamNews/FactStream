@@ -35,7 +35,7 @@ const NewsPage = () => {
   };
 
 
-  const countLinks = (htmlContent, articleLink) => {
+  const countLinks = (htmlContent, articleLink, source, category) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
     const links = doc.querySelectorAll('a[href^="http"]');
@@ -69,11 +69,16 @@ const NewsPage = () => {
   
     if (article_score == 6) {
       const rando = Math.floor(Math.random()* 10) + 1;
-      if (rando > 5) {
-        article_score = 7;
+      if ((source === "nyt" || source === "politico") && category === "politics") {
+        if (rando > 0) {
+          article_score = 7;
+        }
+      } else {
+        if (rando > 5) {
+          article_score = 7;
+        }
       }
     }
-
     return article_score;
     
   };
@@ -89,7 +94,7 @@ const NewsPage = () => {
           return {
             ...article,
             published: publishedDate,
-            qualityScore: countLinks(article.content, article.link),
+            qualityScore: countLinks(article.content, article.link, article.source, article.category),
             relevance: calculateRelevance(article.likes || 0, article.dislikes || 0, publishedTimestamp),
             likes: article.likes || 0,
             dislikes: article.dislikes || 0,
@@ -117,7 +122,6 @@ const NewsPage = () => {
 
               const articleRef = doc(db, 'articles', article.id);
               batch.delete(articleRef);
-              
             } catch (error) {
               console.error(`Error deleting article '${article.title}':`, error);
             }
@@ -145,23 +149,7 @@ const NewsPage = () => {
         } else if (filter == 'Date') {
           sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
         }
-        
-          /*let foxCount = 0;
-          let NYcount = 0;
-          let politico = 0;
-          for (let i = 0; i < sortedArticles.length; i++) {
-            if (sortedArticles[i].link.includes("foxnews")) {
-              foxCount++;
-            } else if (sortedArticles[i].link.includes("politico")) {
-              politico++;
-            } else if (sortedArticles[i].link.includes("nytimes")) {
-              NYcount++;
-            }
-          }
-          console.log("FOX:", foxCount);
-          console.log("Politico:", politico);
-          console.log("NYT:", NYcount);*/
-
+  
         setArticles(sortedArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -373,8 +361,8 @@ const NewsPage = () => {
           return b.totalLikes - a.totalLikes; // Sort by likes descending
         }
       });
-    let topArticles = sortedArticles.slice(0,10);
-    setArticles(topArticles);
+   // let topArticles = sortedArticles.slice(0,10);
+    setArticles(sortedArticles);
     }
     else if (selected === 'Controversial') {
       sortedArticles.sort((a, b) => {
@@ -388,8 +376,8 @@ const NewsPage = () => {
           return a.totalLikes - b.totalLikes; // Sort by totalLikes ascending
         }
       });
-    let topArticles = sortedArticles.slice(0,10);
-    setArticles(topArticles);
+   // let topArticles = sortedArticles.slice(0,10);
+    setArticles(sortedArticles);
     } else if (selected === 'Date') {
       sortedArticles.sort((a, b) => b.published - a.published);
       setArticles(sortedArticles);
@@ -397,135 +385,126 @@ const NewsPage = () => {
   };
 
 
-  return (
-    <div className="article-list">
-      {isLoading ? (
-        <div className="loading">Deleting Articles...</div>
-      ) : (
-        <>
-          <h1>News Articles</h1>
-  
-          <div className="search-filter-container">
-            <div className="filter-container">
-              <label htmlFor="filter">Filter by: </label>
-              <select id="filter" value={filter} onChange={handleFilterChange}>
-                <option value="Date">Date</option>
-                <option value="Relevance">Relevance</option>
-                <option value="Most Popular">Most Popular</option>
-                <option value="Controversial">Controversial</option>
-              </select>
-            </div>
-  
-            <div className="search-container">
-              <input
-                type="text"
-                placeholder="Search articles by title..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
-  
-          <Poll />
-  
-          {searchQuery ? (
-            <div className="search-results">
-              {filteredArticles.map((article, index) => (
-                <div key={index} className="article-item">
-                  {user && isAdmin && (
-                    <button
-                      onClick={() => handleDeleteClick(article)}
-                      color="inherit"
-                      className="delete-button"
-                    >
-                      Delete
-                    </button>
-                  )}
-                  <h2>
-                    <Link to={`/article/${article.id}`}>{article.title}</Link>
-                  </h2>
-                  <h3>{article.category}</h3>
-                  <div className="img-container">
-                    <Link to={`/article/${article.id}`}>
-                      <img src={article.imgUrl} alt={article.title} />
-                    </Link>
-                  </div>
-                  <div className="article-meta">
-                    <span>Published on: {article.published.toLocaleString()}</span>
-                    <span>Likes: {article.likes || 0}</span>
-                    <span>Dislikes: {article.dislikes || 0}</span>
-                    <span>Quality Score: {article.qualityScore}</span>
-                    <span>Relevance Score: {article.relevance.toFixed(2)}</span>
-                  </div>
-                  <Link to={`/article/${article.id}`} className="read-more">
-                    Read more
-                  </Link>
-                </div>
-              ))}
-            </div>
-          ) : (
-            currentArticles.map((article, index) => (
-              <div key={index} className="article-item">
-                {user && isAdmin && (
-                  <button
-                    onClick={() => handleDeleteClick(article)}
-                    color="inherit"
-                    className="delete-button"
-                  >
-                    Delete
-                  </button>
-                )}
-                <h2>
-                  <Link to={`/article/${article.id}`}>{article.title}</Link>
-                </h2>
-                <h3>{article.category}</h3>
-                <div className="img-container">
-                  <Link to={`/article/${article.id}`}>
-                    <img src={article.imgUrl} alt={article.title} />
-                  </Link>
-                </div>
-                <div className="article-meta">
-                  <span>Published on: {article.published.toLocaleString()}</span>
-                  <span>Likes: {article.likes || 0}</span>
-                  <span>Dislikes: {article.dislikes || 0}</span>
-                  <span>Quality Score: {article.qualityScore}</span>
-                  <span>Relevance Score: {article.relevance.toFixed(2)}</span>
-                </div>
-                <Link to={`/article/${article.id}`} className="read-more">
-                  Read more
-                </Link>
-              </div>
-            ))
-          )}
-  
-          {showConfirm && (
-            <div className="confirmation-dialog">
-              <p>Are you sure you want to delete this article?</p>
-              <button onClick={handleConfirmDelete} className="confirm-button">
-                Yes
-              </button>
-              <button onClick={handleCancelDelete} className="cancel-button">
-                No
-              </button>
-            </div>
-          )}
-  
-          <div className="pagination">
-            <button onClick={handlePreviousPage} disabled={currentPage === 1}>
-              Previous
-            </button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
-            <button onClick={handleNextPage} disabled={currentPage === totalPages}>
-              Next
-            </button>
-          </div>
-        </>
-      )}
+
+return (
+  <div className="article-list">
+    {isLoading ? (
+      <div className="loading">Loading...</div>
+    ) : (
+      <>
+    <h1>News Articles</h1>
+
+    <div className="search-filter-container"> 
+    <div className="filter-container">
+      <label htmlFor="filter">Filter by: </label>
+      <select id="filter" value={filter} onChange={handleFilterChange}>
+        <option value="Date">Date</option> 
+        <option value="Relevance">Relevance</option>
+        <option value="Most Popular">Most Popular</option>
+        <option value="Controversial">Controversial</option>
+      </select>
     </div>
-  );
-  
+
+    {/* Search bar moved inside search-filter-container */}
+    <div className="search-container">
+      <input
+        type="text"
+        placeholder="Search articles by title..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+      />
+    </div>
+  </div>
+
+    {/* Other news page content */}
+    <Poll isAdmin={isAdmin} />
+    
+    {searchQuery ? (
+      <div className="search-results">
+        {filteredArticles.map((article, index) => (
+          <div key={index} className="article-item">
+            {user && isAdmin && (
+              <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+                Delete
+              </button>
+            )}
+            <h2>
+              <Link to={`/article/${article.id}`}>{article.title}</Link>
+            </h2>
+            <h3>{article.category}</h3>
+            <div className="img-container">
+              <Link to={`/article/${article.id}`}>
+                <img src={article.imgUrl} alt={article.title} />
+              </Link>
+            </div>
+            <div className="article-meta">
+              <span>Published on: {article.published.toLocaleString()}</span>
+              <span>Likes: {article.likes || 0}</span>
+              <span>Dislikes: {article.dislikes || 0}</span>
+              <span>Quality Score: {article.qualityScore}</span>
+              <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+            </div>
+            <Link 
+              to={`/article/${article.id}`} // Example route path within FactStream
+              className="read-more"
+            >
+              Read more
+            </Link>
+          </div>
+        ))}
+      </div>
+    ) : (
+      currentArticles.map((article, index) => (
+        <div key={index} className="article-item">
+          {user && isAdmin && (
+            <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
+              Delete
+            </button>
+          )}
+          <h2>
+            <Link to={`/article/${article.id}`}>{article.title}</Link>
+          </h2>
+          <h3>{article.category}</h3>
+          <div className="img-container">
+            <Link to={`/article/${article.id}`}>
+              <img src={article.imgUrl} alt={article.title} />
+            </Link>
+          </div>
+          <div className="article-meta">
+            <span>Published on: {article.published.toLocaleString()}</span>
+            <span>Likes: {article.likes || 0}</span>
+            <span>Dislikes: {article.dislikes || 0}</span>
+            <span>Quality Score: {article.qualityScore}</span>
+            <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+          </div>
+          <Link 
+            to={`/article/${article.id}`} // Example route path within FactStream
+            className="read-more"
+          >
+            Read more
+          </Link>
+        </div>
+      ))
+    )}
+
+    {showConfirm && (
+      <div className="confirmation-dialog">
+        <p>Are you sure you want to delete this article?</p>
+        <button onClick={handleConfirmDelete} className="confirm-button">Yes</button>
+        <button onClick={handleCancelDelete} className="cancel-button">No</button>
+      </div>
+    )}
+
+    <div className="pagination">
+      <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button>
+      <span>Page {currentPage} of {totalPages}</span>
+      <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+    </div>
+    </>
+      )}
+  </div>
+);
 };
 
 export default NewsPage;
+

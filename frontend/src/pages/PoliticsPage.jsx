@@ -10,8 +10,10 @@ import { db } from '../firebase';
 const NewsPage = () => {
   const [articles, setArticles] = useState([]);
   const [savedArticles, setSavedArticles] = useState([]);
+  const [filteredArticles, setFilteredArticles] = useState([]);
   const [user, loading, error] = useAuthState(auth);
   const [isSaved, setIsSaved] = useState(false);
+  const [filter, setFilter] = useState("Blank");
 
 
   const countLinks = (htmlContent, articleLink) => {
@@ -56,6 +58,7 @@ const NewsPage = () => {
        // const sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
         setArticles(politicsArticles);
+        setFilteredArticles(politicsArticles);
       } catch (error) {
         console.error('Error fetching articles:', error);
       }
@@ -148,11 +151,35 @@ const NewsPage = () => {
     return isSaved;
   };
 
+  const handleFilterChange = (e) => {
+    const selected = e.target.value;
+    setFilter(e.target.value);
+    let sortedArticles = [...articles];
+
+    if (selected == "Conservative") {
+      sortedArticles = sortedArticles.filter(article => article.source && article.source == "fox");
+    } else if (selected == "Liberal") {
+      sortedArticles = sortedArticles.filter(article => article.source && (article.source === "politico" || article.source === "nyt"));
+    } else if (selected == "Blank"){
+      sortedArticles = [...articles];
+    }
+    setFilteredArticles(sortedArticles);
+  };
 
   return (
     <div className="article-list">
       <h1>Politics</h1>
-      {articles.map((article, index) => (
+      <div className="search-filter-container">
+        <div className="filter-container">
+          <label htmlFor="filter">Filter by: </label>
+          <select id="filter" value={filter} onChange={handleFilterChange}>
+            <option value = "Blank"></option>
+            <option value="Conservative">Conservative</option> 
+            <option value="Liberal">Liberal</option>
+          </select>
+        </div>
+      </div>
+      {filteredArticles.map((article, index) => (
         <div key={index} className="article-item">
           <h2>
             <Link to={`/article/${article.id}`}>{article.title}</Link>

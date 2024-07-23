@@ -1,107 +1,107 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const Poll = () => {
-  const [showPoll, setShowPoll] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [votes, setVotes] = useState({
-    option1: 0,
-    option2: 0,
-    option3: 0,
-    option4: 0,
-    option5: 0,
-  });
+const Poll = ({ isAdmin }) => {
+  const [poll, setPoll] = useState({ question: '', options: ['', '', '', '', ''] });
+  const [isCreating, setIsCreating] = useState(false);
+  const [isPollActive, setIsPollActive] = useState(false);
+  const [responses, setResponses] = useState({});
+  const [timer, setTimer] = useState(180); // 3 minutes in seconds
+  const [selectedOption, setSelectedOption] = useState('');
   const [hasVoted, setHasVoted] = useState(false);
+
+  const handleOptionChange = (index, value) => {
+    const newOptions = [...poll.options];
+    newOptions[index] = value;
+    setPoll({ ...poll, options: newOptions });
+  };
+
+  const handleCreatePoll = () => {
+    setIsCreating(true);
+  };
+
+  const handleFinishCreatingPoll = () => {
+    setIsCreating(false);
+    setIsPollActive(true);
+    setTimer(180);
+  };
 
   const handleVote = () => {
     if (selectedOption && !hasVoted) {
-      setVotes({
-        ...votes,
-        [selectedOption]: votes[selectedOption] + 1,
-      });
+      setResponses({ ...responses, [selectedOption]: (responses[selectedOption] || 0) + 1 });
+      setSelectedOption('');
       setHasVoted(true);
     }
   };
 
-  const handleTakePoll = () => {
-    setShowPoll(true);
-  };
+  useEffect(() => {
+    let countdown;
+    if (isPollActive && timer > 0) {
+      countdown = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      setIsPollActive(false);
+    }
+    return () => clearInterval(countdown);
+  }, [isPollActive, timer]);
 
   return (
     <div>
-      {!showPoll ? (
-        <button onClick={handleTakePoll}>Take the Poll</button>
-      ) : (
+      {isAdmin && !isCreating && !isPollActive && (
+        <button onClick={handleCreatePoll}>Create a poll</button>
+      )}
+      {isCreating && (
         <div>
-          <h2>How many times have you accessed the website?</h2>
-          <div>
+          <input
+            type="text"
+            placeholder="Enter your question"
+            value={poll.question}
+            onChange={(e) => setPoll({ ...poll, question: e.target.value })}
+          />
+          {poll.options.map((option, index) => (
             <input
-              type="radio"
-              id="option1"
-              name="poll"
-              value="option1"
-              checked={selectedOption === 'option1'}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              disabled={hasVoted}
+              key={index}
+              type="text"
+              placeholder={`Option ${index + 1}`}
+              value={option}
+              onChange={(e) => handleOptionChange(index, e.target.value)}
             />
-            <label htmlFor="option1">1</label>
-          </div>
-          <div>
-            <input
-              type="radio"
-              id="option2"
-              name="poll"
-              value="option2"
-              checked={selectedOption === 'option2'}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              disabled={hasVoted}
-            />
-            <label htmlFor="option2">2</label>
-          </div>
-          <div>
-            <input
-              type="radio"
-              id="option3"
-              name="poll"
-              value="option3"
-              checked={selectedOption === 'option3'}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              disabled={hasVoted}
-            />
-            <label htmlFor="option3">3</label>
-          </div>
-          <div>
-            <input
-              type="radio"
-              id="option4"
-              name="poll"
-              value="option4"
-              checked={selectedOption === 'option4'}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              disabled={hasVoted}
-            />
-            <label htmlFor="option4">4</label>
-          </div>
-          <div>
-            <input
-              type="radio"
-              id="option5"
-              name="poll"
-              value="option5"
-              checked={selectedOption === 'option5'}
-              onChange={(e) => setSelectedOption(e.target.value)}
-              disabled={hasVoted}
-            />
-            <label htmlFor="option5">5</label>
-          </div>
-          <div style={{ marginTop: '20px' }}>
-            <button onClick={handleVote} disabled={hasVoted}>Vote</button>
-          </div>
-          <h3>Results:</h3>
-          <p>1: {votes.option1}</p>
-          <p>2: {votes.option2}</p>
-          <p>3: {votes.option3}</p>
-          <p>4: {votes.option4}</p>
-          <p>5: {votes.option5}</p>
+          ))}
+          <button onClick={handleFinishCreatingPoll}>Finish creating poll</button>
+        </div>
+      )}
+      {isPollActive && (
+        <div>
+          <h3>{poll.question}</h3>
+          {poll.options.map((option, index) => (
+            option && (
+              <div key={index}>
+                <input
+                  type="radio"
+                  name="poll"
+                  value={option}
+                  disabled={hasVoted}
+                  checked={selectedOption === option}
+                  onChange={() => setSelectedOption(option)}
+                />
+                {option}
+              </div>
+            )
+          ))}
+          <button onClick={handleVote} disabled={hasVoted}>Submit vote</button>
+          <p>Time remaining: {timer} seconds</p>
+        </div>
+      )}
+      {!isPollActive && !isCreating && (
+        <div>
+          <h3>{poll.question}</h3>
+          {poll.options.map((option, index) => (
+            option && (
+              <div key={index}>
+                {option}: {responses[option] || 0} votes
+              </div>
+            )
+          ))}
         </div>
       )}
     </div>
