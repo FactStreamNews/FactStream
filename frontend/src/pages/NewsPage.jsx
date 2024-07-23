@@ -226,7 +226,6 @@ const NewsPage = () => {
     if (query.startsWith("source:")) {
       const sourceName = query.split("source:")[1].trim().toLowerCase();
       const filteredBySource = articles.filter(article => article.source.includes(sourceName));
-      console.log(sourceName)
       setFilteredArticles(filteredBySource);
     } else {
   
@@ -414,9 +413,10 @@ return (
 
     {/* Search bar moved inside search-filter-container */}
     <div className="search-container">
+    <div className="search-tip">Search sources with "source:[name]" prefix.</div> {/* New Tip */}
       <input
         type="text"
-        placeholder="Search articles by title..."
+        placeholder="Search articles by title or source..."
         value={searchQuery}
         onChange={handleSearchChange}
       />
