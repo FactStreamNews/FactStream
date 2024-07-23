@@ -12,6 +12,7 @@ const NewsPage = () => {
   const [savedArticles, setSavedArticles] = useState([]);
   const [user, loading, error] = useAuthState(auth);
   const [isSaved, setIsSaved] = useState(false);
+  const [filter, setFilter] = useState("Blank");
 
 
   const countLinks = (htmlContent, articleLink) => {
@@ -148,10 +149,30 @@ const NewsPage = () => {
     return isSaved;
   };
 
+  const handleFilterChange = (e) => {
+    const selected = e.target.value;
+    setFilter(e.target.value);
+
+    if (selected == "Conservative") {
+      console.log("CONSERVATIVIE");
+    } else if (selected == "Liberal") {
+      console.log("LIBERAL");
+    }
+  };
 
   return (
     <div className="article-list">
       <h1>Politics</h1>
+      <div className="search-filter-container">
+        <div className="filter-container">
+          <label htmlFor="filter">Filter by: </label>
+          <select id="filter" value={filter} onChange={handleFilterChange}>
+            <option value = "Blank"></option>
+            <option value="Conservative">Conservative</option> 
+            <option value="Liberal">Liberal</option>
+          </select>
+        </div>
+      </div>
       {articles.map((article, index) => (
         <div key={index} className="article-item">
           <h2>
