@@ -229,7 +229,7 @@ const NewsPage = () => {
     }
     if (query.startsWith("source:")) {
       const sourceName = query.split("source:")[1].trim().toLowerCase();
-      const filteredBySource = articles.filter(article => article.source.includes(sourceName));
+      const filteredBySource = articles.filter(article => article.source && article.source.includes(sourceName));
       setFilteredArticles(filteredBySource);
     } else {
   
@@ -239,7 +239,26 @@ const NewsPage = () => {
 
   }
   };
+
+  const handleSuggestionClick = (source) => {
+    setSearchQuery(`source:${source}`);
+    setFilteredSources([]);
+  };
   
+
+  const formatRelevanceScore = (article) => {
+    const likes = article.likes || 0;
+    const dislikes = article.dislikes || 0;
+    const publishedTimestamp = new Date(article.published).getTime();
+    const currentTimestamp = Date.now();
+    const timeDifferenceHours = (currentTimestamp - publishedTimestamp) / (1000 * 60 * 60);
+
+    const numerator = 2 * likes - 3 * dislikes;
+    const denominator = timeDifferenceHours.toFixed(2);
+    const relevanceScore = (numerator / timeDifferenceHours).toFixed(2);
+
+    return { numerator, denominator, relevanceScore };
+  };
 
   // delete article for admin use
   const handleConfirmDelete = async () => {
@@ -424,15 +443,15 @@ return (
         value={searchQuery}
         onChange={handleSearchChange}
       />
-      {filteredSources.length > 0 && (
-        <div className="suggestions">
-          {filteredSources.map((source, index) => (
-            <div key={index} className="suggestion-item" onClick={() => setSearchQuery(`source:${source}`)}>
-              {source}
-            </div>
-          ))}
-        </div>
-      )}
+         {filteredSources.length > 0 && (
+                <div className="suggestions">
+                  {filteredSources.map((source, index) => (
+                    <div key={index} className="suggestion-item" onClick={() => handleSuggestionClick(source)}>
+                      {source}
+                    </div>
+                  ))}
+                </div>
+              )}
     </div>
   </div>
 
@@ -444,6 +463,7 @@ return (
         {filteredArticles.length > 0 ? (
 
         filteredArticles.map((article, index) => (
+
           <div key={index} className="article-item">
             {user && isAdmin && (
               <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
@@ -464,8 +484,11 @@ return (
               <span>Likes: {article.likes || 0}</span>
               <span>Dislikes: {article.dislikes || 0}</span>
               <span>Quality Score: {article.qualityScore}</span>
-              <span>Relevance Score: {article.relevance.toFixed(2)}</span>
-            </div>
+              <span>
+                      Relevance Score: (2 * {article.likes} - 3 * {article.dislikes}) / {denominator} hours
+                      <br />
+                      Calculated: ({numerator}/{denominator}) {relevanceScore}
+                    </span>      </div>
             <Link 
               to={`/article/${article.id}`} // Example route path within FactStream
               className="read-more"
@@ -506,7 +529,12 @@ return (
             <span>Likes: {article.likes || 0}</span>
             <span>Dislikes: {article.dislikes || 0}</span>
             <span>Quality Score: {article.qualityScore}</span>
-            <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+
+            <span>
+                      Relevance Score: (2 * {article.likes} - 3 * {article.dislikes}) / {denominator} hours
+                      <br />
+                      Calculated: ({numerator}/{denominator}) {relevanceScore}
+                    </span>
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream
