@@ -462,7 +462,10 @@ return (
       <div className="search-results">
         {filteredArticles.length > 0 ? (
 
-        filteredArticles.map((article, index) => (
+        filteredArticles.map((article, index) => {
+          const { numerator, denominator, relevanceScore } = formatRelevanceScore(article);
+
+          return (
 
           <div key={index} className="article-item">
             {user && isAdmin && (
@@ -496,7 +499,7 @@ return (
               Read more
             </Link>
           </div>
-        ))
+        )})
       ) : (
         <div className="no-results"> 
           {searchQuery.startsWith("source:") ? (
@@ -508,7 +511,11 @@ return (
       )}
     </div>
   ) : (
-      currentArticles.map((article, index) => (
+      currentArticles.map((article, index) => { 
+        const { numerator, denominator, relevanceScore } = formatRelevanceScore(article);
+
+        return(
+
         <div key={index} className="article-item">
           {user && isAdmin && (
             <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
@@ -543,7 +550,7 @@ return (
             Read more
           </Link>
         </div>
-      ))
+      )})
     )}
 
     {showConfirm && (
