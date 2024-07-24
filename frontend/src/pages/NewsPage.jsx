@@ -535,8 +535,9 @@ return (
             <span>Published on: {article.published.toLocaleString()}</span>
             <span>Likes: {article.likes || 0}</span>
             <span>Dislikes: {article.dislikes || 0}</span>
-            <span>Quality Score: {article.qualityScore}</span>
-
+            {user && isAdmin && (
+                        <span>Quality Score: {article.qualityScore}</span>
+                      )}
             <span>
                       Relevance Score: (2 * {article.likes} - 3 * {article.dislikes}) / {denominator} hours
                       <br />
