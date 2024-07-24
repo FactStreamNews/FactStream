@@ -83,6 +83,10 @@ const NewsPage = () => {
         }
       }
     }
+
+    if (htmlContent.length < 50) {
+      article_score = 0;
+    }
     return article_score;
     
   };
@@ -110,37 +114,45 @@ const NewsPage = () => {
         const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7 && !article.isRecovered);
         console.log(lowquality);
         const deleteLowQualityArticles = async () => {
-          const batch = writeBatch(db);
-          for (const article of lowquality) {
-            try {
-              const deleted = new Date().toISOString();
-              const { id, ...articleWithoutId } = article;
-              await addDoc(collection(db, 'deleted_articles'), {
-                ...articleWithoutId, 
-                deletedBy: 'Automatically',
-                reason: 'Quality',
-                deletedOn: deleted,
-                article_id: article.id
-              });
-              console.log(`Article '${article.title}' deleted successfully`);
+          const batchSize = 500;
+          const numBatch = Math.ceil(lowquality.length / batchSize);
 
-              const articleRef = doc(db, 'articles', article.id);
-              batch.delete(articleRef);
-            } catch (error) {
-              console.error(`Error deleting article '${article.title}':`, error);
+          for (let i = 0; i < numBatch; i++) {
+            const batch = writeBatch(db);
+            const start = i * batchSize;
+            const end = start + batchSize
+            const currentBatch = lowquality.slice(start, end);
+
+            for (const article of currentBatch) {
+              try {
+                const deleted = new Date().toISOString();
+                const { id, ...articleWithoutId } = article;
+                await addDoc(collection(db, 'deleted_articles'), {
+                  ...articleWithoutId, 
+                  deletedBy: 'Automatically',
+                  reason: 'Quality',
+                  deletedOn: deleted,
+                  article_id: article.id
+                });
+                console.log(`Article '${article.title}' deleted successfully`);
+  
+                const articleRef = doc(db, 'articles', article.id);
+                batch.delete(articleRef);
+              } catch (error) {
+                console.error(`Error deleting article '${article.title}':`, error);
+              }
             }
-          }
-          try {
-            await batch.commit(); // Commit the batch write
-            setArticles(articles.filter(temparticle => !lowquality.some(lq => lq.id === temparticle.id)));
-            console.log('Batch delete completed successfully');
-          } catch (error) {
-            console.error('Error committing batch delete:', error);
-          }
+            try {
+              await batch.commit(); // Commit the batch write
+              setArticles(articles.filter(temparticle => !lowquality.some(lq => lq.id === temparticle.id)));
+              console.log('Batch delete completed successfully');
+            } catch (error) {
+              console.error('Error committing batch delete:', error);
+            }
+          }   
         };
 
         await deleteLowQualityArticles();
-  
 
         let sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
