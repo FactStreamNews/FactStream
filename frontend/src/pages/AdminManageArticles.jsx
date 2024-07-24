@@ -107,15 +107,23 @@ const AdminManageArticles = () => {
           const article_number = deletedArticlesSnapshot.size;
           console.log(article_number);
           if (article_number > 100) {
-            console.log("here");
+            console.log("Deleting excess articles");
             const articlesToDelete = sortedDeletedArticlesList.slice(100);
-            const batch = writeBatch(db);
-            articlesToDelete.forEach(article => {
-            const articleRef = doc(db, 'deleted_articles', article.id);
-            batch.delete(articleRef);
-            });
-            await batch.commit();
-            console.log(`Deleted ${articlesToDelete.length} articles.`);
+            
+            // Split into batches of 500
+            const batchSize = 500;
+            for (let i = 0; i < articlesToDelete.length; i += batchSize) {
+              const batchArticles = articlesToDelete.slice(i, i + batchSize);
+              const batch = writeBatch(db);
+  
+              batchArticles.forEach(article => {
+                const articleRef = doc(db, 'deleted_articles', article.id);
+                batch.delete(articleRef);
+              });
+  
+              await batch.commit();
+              console.log(`Deleted ${batchArticles.length} articles in batch ${i / batchSize + 1}`);
+            }
           }
           const mostrecent = sortedDeletedArticlesList.slice(0, 50);
           setDeletedArticles(mostrecent);
