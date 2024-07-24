@@ -7,6 +7,7 @@ const Poll = () => {
   const [pollOptions, setPollOptions] = useState(['', '']); // Initialize with two options
   const [polls, setPolls] = useState([]);
   const [selectedOption, setSelectedOption] = useState({});
+  const [hasVoted, setHasVoted] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
   const user = auth.currentUser; // Assume you have user authentication set up
 
@@ -52,52 +53,59 @@ const Poll = () => {
       const pollsList = pollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPolls(pollsList);
     } catch (error) {
-      console.error("Error adding poll: ", error);
+      console.error('Error adding poll: ', error);
+    }
+  };
+
+  const handleSelectOption = (pollId, optionIndex) => {
+    setSelectedOption({ ...selectedOption, [pollId]: optionIndex });
+  };
+
+  const handleVote = async (pollId, optionIndex) => {
+    if (!user) {
+      alert('Please sign in to vote.');
+      return;
+    }
+
+    if (hasVoted[pollId]) {
+      alert('You cannot vote more than once in a poll.');
+      return;
+    }
+
+    try {
+      const pollRef = doc(db, 'polls', pollId);
+      const pollDoc = await getDoc(pollRef);
+      if (pollDoc.exists()) {
+        const pollData = pollDoc.data();
+        const updatedOptions = pollData.options.map((option, idx) => {
+          if (idx === optionIndex) {
+            return { ...option, votes: option.votes + 1 };
+          }
+          return option;
+        });
+
+        await updateDoc(pollRef, { options: updatedOptions });
+
+        setHasVoted({ ...hasVoted, [pollId]: true });
+
+        // Fetch updated polls
+        const pollsSnap = await getDocs(collection(db, 'polls'));
+        const pollsList = pollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPolls(pollsList);
+      }
+    } catch (error) {
+      console.error('Error voting: ', error);
     }
   };
 
   const handleOptionChange = (index, value) => {
-    const newOptions = [...pollOptions];
-    newOptions[index] = value;
-    setPollOptions(newOptions);
+    const updatedOptions = [...pollOptions];
+    updatedOptions[index] = value;
+    setPollOptions(updatedOptions);
   };
 
   const addOptionField = () => {
     setPollOptions([...pollOptions, '']);
-  };
-
-  const handleVote = async (pollId, optionIndex) => {
-    const pollRef = doc(db, 'polls', pollId);
-    const pollSnap = await getDoc(pollRef);
-    const pollData = pollSnap.data();
-
-    const updatedOptions = pollData.options.map((option, index) => {
-      if (index === optionIndex) {
-        return { ...option, votes: option.votes + 1 };
-      }
-      return option;
-    });
-
-    await updateDoc(pollRef, { options: updatedOptions });
-    // Fetch polls again to update the list
-    const pollsSnap = await getDocs(collection(db, 'polls'));
-    const pollsList = pollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setPolls(pollsList);
-  };
-
-  useEffect(() => {
-    const fetchPolls = async () => {
-      const pollsRef = collection(db, 'polls');
-      const pollsSnap = await getDocs(pollsRef);
-      const pollsList = pollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPolls(pollsList);
-    };
-
-    fetchPolls();
-  }, []);
-
-  const handleSelectOption = (pollId, optionIndex) => {
-    setSelectedOption({ [pollId]: optionIndex });
   };
 
   return (
