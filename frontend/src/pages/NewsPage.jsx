@@ -25,6 +25,10 @@ const NewsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredArticles, setFilteredArticles] = useState([]);
 
+  const [filteredSources, setFilteredSources] = useState([]);
+
+  const sources = ["Fox News", "New York Times", "Politico"]; // List of sources
+
 
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 10;
@@ -413,13 +417,22 @@ return (
 
     {/* Search bar moved inside search-filter-container */}
     <div className="search-container">
-    <div className="search-tip">Search sources with "source:[name]" prefix.</div> {/* New Tip */}
+      <div className="search-tip">Search sources with "source:[name]" prefix.</div>
       <input
         type="text"
-        placeholder="Search articles by title or source..."
+        placeholder="Search articles by title or source"
         value={searchQuery}
         onChange={handleSearchChange}
       />
+      {filteredSources.length > 0 && (
+        <div className="suggestions">
+          {filteredSources.map((source, index) => (
+            <div key={index} className="suggestion-item" onClick={() => setSearchQuery(`source:${source}`)}>
+              {source}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   </div>
 
@@ -428,7 +441,9 @@ return (
     
     {searchQuery ? (
       <div className="search-results">
-        {filteredArticles.map((article, index) => (
+        {filteredArticles.length > 0 ? (
+
+        filteredArticles.map((article, index) => (
           <div key={index} className="article-item">
             {user && isAdmin && (
               <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
@@ -458,9 +473,18 @@ return (
               Read more
             </Link>
           </div>
-        ))}
-      </div>
-    ) : (
+        ))
+      ) : (
+        <div className="no-results"> 
+          {searchQuery.startsWith("source:") ? (
+                    <>Could not find source called "{searchQuery.substring(7)}"</>
+                  ) : (
+                    <>No results found for query "{searchQuery}"</>
+                  )}
+        </div>
+      )}
+    </div>
+  ) : (
       currentArticles.map((article, index) => (
         <div key={index} className="article-item">
           {user && isAdmin && (
