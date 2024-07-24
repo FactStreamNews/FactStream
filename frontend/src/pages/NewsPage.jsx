@@ -487,11 +487,13 @@ return (
               <span>Likes: {article.likes || 0}</span>
               <span>Dislikes: {article.dislikes || 0}</span>
               <span>Quality Score: {article.qualityScore}</span>
+              {isAdmin &&
               <span>
                       Relevance Score: (2 * {article.likes} - 3 * {article.dislikes}) / {denominator} hours
                       <br />
                       Calculated: ({numerator}/{denominator}) {relevanceScore}
-                    </span>      </div>
+                    </span>  
+            }    </div>
             <Link 
               to={`/article/${article.id}`} // Example route path within FactStream
               className="read-more"
@@ -537,11 +539,13 @@ return (
             <span>Dislikes: {article.dislikes || 0}</span>
             <span>Quality Score: {article.qualityScore}</span>
 
+            {isAdmin &&
             <span>
                       Relevance Score: (2 * {article.likes} - 3 * {article.dislikes}) / {denominator} hours
                       <br />
                       Calculated: ({numerator}/{denominator}) {relevanceScore}
                     </span>
+      }
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream
