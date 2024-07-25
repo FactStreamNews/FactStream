@@ -8,6 +8,43 @@ import { updateDoc, doc, arrayUnion, arrayRemove, addDoc, getDoc, query, collect
 import { db } from '../firebase';
 import Poll from '../components/Poll.jsx';
 
+const randomNormal = (mean, stdDev) => {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  num = num * stdDev + mean;
+  return Math.round(num);
+};
+
+const simulateLikesDislikes = (articles) => {
+  return articles.map(article => {
+    if (!article.simulated) {
+      const qualityScore = article.qualityScore || 0;
+      const meanLikes = qualityScore * 10;
+      const stdDevLikes = 5;
+      const meanDislikes = (10 - qualityScore) * 2; 
+      const stdDevDislikes = 2; 
+
+      const simulatedLikes = Math.max(0, randomNormal(meanLikes, stdDevLikes));
+      const simulatedDislikes = Math.max(0, randomNormal(meanDislikes, stdDevDislikes));
+
+      return {
+        ...article,
+        likes: simulatedLikes,
+        dislikes: simulatedDislikes,
+        simulated: true,
+        relevance: calculateRelevance(simulatedLikes, simulatedDislikes, article.published.getTime())
+      };
+    }
+    return article;
+  });
+};
+
+const calculateRelevance = (likes, dislikes, publishedTimestamp) => {
+  const timeSincePublished = (Date.now() - publishedTimestamp) / (1000 * 60 * 60); 
+  return ((2 * likes) - (3 * dislikes)) / timeSincePublished;
+};
 
 const NewsPage = () => {
   
@@ -96,7 +133,7 @@ const NewsPage = () => {
       setIsLoading(true);
       try {
         const response = await axios.get('/articles');
-        const articlesWithFormattedDates = response.data.map(article => {
+        let articlesWithFormattedDates = response.data.map(article => {
           const publishedTimestamp = article.published._seconds * 1000; 
           const publishedDate = new Date(publishedTimestamp);
           return {
@@ -109,6 +146,9 @@ const NewsPage = () => {
             totalLikes: (article.likes || 0) - (article.dislikes || 0)
           };
         });
+
+        articlesWithFormattedDates = simulateLikesDislikes(articlesWithFormattedDates);
+
 
         //Handle automatic deletion of low quality articles
         const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7 && !article.isRecovered);
