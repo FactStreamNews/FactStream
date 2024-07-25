@@ -60,8 +60,15 @@ const logInWithEmailAndPassword = async (email, password) => {
 };
 const registerWithEmailAndPassword = async (name, email, password) => {
   const q = query(collection(db, "users"), where("email", "==", email));
+  const banquery = query(collection(db, "banned_users"), where ("email", "==", email));
+  const banQuerySnapshot = await(getDocs(banquery));
   const querySnapshot = await getDocs(q);
-  if (querySnapshot.empty)
+    if (!(banQuerySnapshot.empty)){
+      alert("All accounts attached to that email have been banned!")
+    } else if (!querySnapshot.empty) {
+      alert("An account with that email already exists!")
+    }
+    else
   {
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
@@ -87,9 +94,8 @@ const registerWithEmailAndPassword = async (name, email, password) => {
       console.error(err);
       alert(err.message);
     }
-} else {
-  alert("An account with that email already exists!");
 }
+  
 };
 const sendPasswordReset = async (email) => {
   try {
