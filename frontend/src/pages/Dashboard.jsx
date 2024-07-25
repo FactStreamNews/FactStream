@@ -4,25 +4,26 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import { auth, db, logout } from "../firebase";
 import { updateEmail, updatePassword, deleteUser } from "firebase/auth";
-import { query, collection, getDocs, where, updateDoc } from "firebase/firestore";
+import { query, collection, getDocs, where, updateDoc, addDoc } from "firebase/firestore";
 import { doc, deleteDoc } from "firebase/firestore";
 import PreferencesModal from "../components/PreferencesModal";
 
 function Dashboard() {
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState("");
-  const [profilePicture, setProfilePicture] = useState(""); // New state for profile picture URL
+  const [profilePicture, setProfilePicture] = useState("");
   const navigate = useNavigate();
   const [isInputVisible, setInputVisible] = useState(false);
   const [email, setEmail] = useState(user?.email || "");
-  const [updating, setUpdating] = useState(false); // State to manage updating status
+  const [updating, setUpdating] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
-  const [isPublic, setIsPublic] = useState(true); // State to manage profile visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
   const [preferences, setPreferences] = useState([]);
-  const [activity, setActivity] = useState([]); // State to manage user activity
+  const [activity, setActivity] = useState([]);
+  const [feedback, setFeedback] = useState(""); // State for feedback
 
   const fetchUserName = async () => {
     try {
@@ -49,7 +50,7 @@ function Dashboard() {
         newPreferences.push("Travel");
       }
       setName(data.name);
-      setProfilePicture(data.profilePictureUrl); // Set profile picture URL
+      setProfilePicture(data.profilePictureUrl);
       setPreferences(newPreferences);
       const priv = data.is_private;
       console.log(priv);
@@ -76,7 +77,7 @@ function Dashboard() {
     if (loading) return;
     if (!user) return navigate("/");
     fetchUserName();
-    fetchUserActivity(); // Fetch user activity on component mount
+    fetchUserActivity();
   }, [user, loading]);
 
   const handleEditClick = () => {
@@ -116,7 +117,7 @@ function Dashboard() {
   const handleNameEdit = () => {
     setEditingName(!editingName);
     if (!editingName) {
-      setNewName(name); // Set the input field value to current name
+      setNewName(name);
     }
   };
 
@@ -145,8 +146,8 @@ function Dashboard() {
         const doc1 = await getDocs(q);
         const docId = doc1.docs[0].id;
         const userDocRef = doc(db, "users", docId);
-        await deleteDoc(userDocRef); // Delete user data from Firestore
-        await deleteUser(auth.currentUser); // Delete user from Firebase Authentication
+        await deleteDoc(userDocRef);
+        await deleteUser(auth.currentUser);
         alert("Account deleted successfully");
         navigate("/");
       } catch (err) {
@@ -201,6 +202,29 @@ function Dashboard() {
     alert("Profile changes saved successfully!");
   };
 
+  const handleFeedbackChange = (e) => {
+    setFeedback(e.target.value);
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!feedback) {
+      alert("Feedback cannot be empty");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "feedback"), {
+        userId: user?.uid,
+        feedback: feedback,
+        timestamp: new Date()
+      });
+      alert("Feedback submitted successfully");
+      setFeedback(""); // Clear feedback input after submission
+    } catch (err) {
+      console.error(err);
+      alert(`An error occurred while submitting feedback: ${err.message}`);
+    }
+  };
+
   return (
     <div>
       <h1>Welcome {name}</h1>
@@ -210,7 +234,7 @@ function Dashboard() {
       <button className="dashboard__btn-small" onClick={handleSaveProfile}>Save</button>
       {/* Other UI elements */}
       <div>
-        <label>Email: {user?.email}     </label>
+        <label>Email: {user?.email}</label>
         {editingName ? (
           <div>
             <input
@@ -275,6 +299,19 @@ function Dashboard() {
         ) : (
           <p>No past activity found.</p>
         )}
+      </div>
+      <div>
+        <h2>Submit Feedback</h2>
+        <textarea
+          value={feedback}
+          onChange={handleFeedbackChange}
+          placeholder="Enter your feedback here"
+          rows="4"
+          cols="50"
+        />
+        <button className="dashboard__btn" onClick={handleSubmitFeedback}>
+          Submit Feedback
+        </button>
       </div>
       <div>
         <button className="dashboard__btn" onClick={logout}>

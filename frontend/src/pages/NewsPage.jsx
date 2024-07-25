@@ -25,6 +25,10 @@ const NewsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredArticles, setFilteredArticles] = useState([]);
 
+  const [filteredSources, setFilteredSources] = useState([]);
+
+  const sources = ["Fox News", "New York Times", "Politico"]; // List of sources
+
 
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 10;
@@ -79,6 +83,10 @@ const NewsPage = () => {
         }
       }
     }
+
+    if (htmlContent.length < 50) {
+      article_score = 0;
+    }
     return article_score;
     
   };
@@ -106,37 +114,45 @@ const NewsPage = () => {
         const lowquality = articlesWithFormattedDates.filter(article => article.qualityScore < 7 && !article.isRecovered);
         console.log(lowquality);
         const deleteLowQualityArticles = async () => {
-          const batch = writeBatch(db);
-          for (const article of lowquality) {
-            try {
-              const deleted = new Date().toISOString();
-              const { id, ...articleWithoutId } = article;
-              await addDoc(collection(db, 'deleted_articles'), {
-                ...articleWithoutId, 
-                deletedBy: 'Automatically',
-                reason: 'Quality',
-                deletedOn: deleted,
-                article_id: article.id
-              });
-              console.log(`Article '${article.title}' deleted successfully`);
+          const batchSize = 500;
+          const numBatch = Math.ceil(lowquality.length / batchSize);
 
-              const articleRef = doc(db, 'articles', article.id);
-              batch.delete(articleRef);
-            } catch (error) {
-              console.error(`Error deleting article '${article.title}':`, error);
+          for (let i = 0; i < numBatch; i++) {
+            const batch = writeBatch(db);
+            const start = i * batchSize;
+            const end = start + batchSize
+            const currentBatch = lowquality.slice(start, end);
+
+            for (const article of currentBatch) {
+              try {
+                const deleted = new Date().toISOString();
+                const { id, ...articleWithoutId } = article;
+                await addDoc(collection(db, 'deleted_articles'), {
+                  ...articleWithoutId, 
+                  deletedBy: 'Automatically',
+                  reason: 'Quality',
+                  deletedOn: deleted,
+                  article_id: article.id
+                });
+                console.log(`Article '${article.title}' deleted successfully`);
+  
+                const articleRef = doc(db, 'articles', article.id);
+                batch.delete(articleRef);
+              } catch (error) {
+                console.error(`Error deleting article '${article.title}':`, error);
+              }
             }
-          }
-          try {
-            await batch.commit(); // Commit the batch write
-            setArticles(articles.filter(temparticle => !lowquality.some(lq => lq.id === temparticle.id)));
-            console.log('Batch delete completed successfully');
-          } catch (error) {
-            console.error('Error committing batch delete:', error);
-          }
+            try {
+              await batch.commit(); // Commit the batch write
+              setArticles(articles.filter(temparticle => !lowquality.some(lq => lq.id === temparticle.id)));
+              console.log('Batch delete completed successfully');
+            } catch (error) {
+              console.error('Error committing batch delete:', error);
+            }
+          }   
         };
 
         await deleteLowQualityArticles();
-  
 
         let sortedArticles = articlesWithFormattedDates.sort((a, b) => b.published - a.published);
 
@@ -223,13 +239,38 @@ const NewsPage = () => {
       setFilteredArticles([]);
       return;
     }
+    if (query.startsWith("source:")) {
+      const sourceName = query.split("source:")[1].trim().toLowerCase();
+      const filteredBySource = articles.filter(article => article.source && article.source.includes(sourceName));
+      setFilteredArticles(filteredBySource);
+    } else {
   
     const filtered = articles.filter(article => 
-      article.title.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredArticles(filtered);
+      article.title.toLowerCase().includes(query.toLowerCase()));
+      setFilteredArticles(filtered);
+
+  }
+  };
+
+  const handleSuggestionClick = (source) => {
+    setSearchQuery(`source:${source}`);
+    setFilteredSources([]);
   };
   
+
+  const formatRelevanceScore = (article) => {
+    const likes = article.likes || 0;
+    const dislikes = article.dislikes || 0;
+    const publishedTimestamp = new Date(article.published).getTime();
+    const currentTimestamp = Date.now();
+    const timeDifferenceHours = (currentTimestamp - publishedTimestamp) / (1000 * 60 * 60);
+
+    const numerator = 2 * likes - 3 * dislikes;
+    const denominator = timeDifferenceHours.toFixed(2);
+    const relevanceScore = (numerator / timeDifferenceHours).toFixed(2);
+
+    return { numerator, denominator, relevanceScore };
+  };
 
   // delete article for admin use
   const handleConfirmDelete = async () => {
@@ -407,12 +448,22 @@ return (
 
     {/* Search bar moved inside search-filter-container */}
     <div className="search-container">
+      <div className="search-tip">Search sources with "source:[name]" prefix.</div>
       <input
         type="text"
-        placeholder="Search articles by title..."
+        placeholder="Search articles by title or source"
         value={searchQuery}
         onChange={handleSearchChange}
       />
+         {filteredSources.length > 0 && (
+                <div className="suggestions">
+                  {filteredSources.map((source, index) => (
+                    <div key={index} className="suggestion-item" onClick={() => handleSuggestionClick(source)}>
+                      {source}
+                    </div>
+                  ))}
+                </div>
+              )}
     </div>
   </div>
 
@@ -421,7 +472,13 @@ return (
     
     {searchQuery ? (
       <div className="search-results">
-        {filteredArticles.map((article, index) => (
+        {filteredArticles.length > 0 ? (
+
+        filteredArticles.map((article, index) => {
+          const { numerator, denominator, relevanceScore } = formatRelevanceScore(article);
+
+          return (
+
           <div key={index} className="article-item">
             {user && isAdmin && (
               <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
@@ -442,8 +499,13 @@ return (
               <span>Likes: {article.likes || 0}</span>
               <span>Dislikes: {article.dislikes || 0}</span>
               <span>Quality Score: {article.qualityScore}</span>
-              <span>Relevance Score: {article.relevance.toFixed(2)}</span>
-            </div>
+              {isAdmin &&
+              <span>
+                      Relevance Score: (2 * {article.likes} - 3 * {article.dislikes}) / {denominator} hours
+                      <br />
+                      Calculated: ({numerator}/{denominator}) {relevanceScore}
+                    </span>  
+            }    </div>
             <Link 
               to={`/article/${article.id}`} // Example route path within FactStream
               className="read-more"
@@ -451,10 +513,23 @@ return (
               Read more
             </Link>
           </div>
-        ))}
-      </div>
-    ) : (
-      currentArticles.map((article, index) => (
+        )})
+      ) : (
+        <div className="no-results"> 
+          {searchQuery.startsWith("source:") ? (
+                    <>Could not find source called "{searchQuery.substring(7)}"</>
+                  ) : (
+                    <>No results found for query "{searchQuery}"</>
+                  )}
+        </div>
+      )}
+    </div>
+  ) : (
+      currentArticles.map((article, index) => { 
+        const { numerator, denominator, relevanceScore } = formatRelevanceScore(article);
+
+        return(
+
         <div key={index} className="article-item">
           {user && isAdmin && (
             <button onClick={() => handleDeleteClick(article)} color="inherit" className="delete-button">
@@ -474,8 +549,16 @@ return (
             <span>Published on: {article.published.toLocaleString()}</span>
             <span>Likes: {article.likes || 0}</span>
             <span>Dislikes: {article.dislikes || 0}</span>
-            <span>Quality Score: {article.qualityScore}</span>
-            <span>Relevance Score: {article.relevance.toFixed(2)}</span>
+            {user && isAdmin && (
+                        <span>Quality Score: {article.qualityScore}</span>
+                      )}
+            {isAdmin &&
+            <span>
+                      Relevance Score: (2 * {article.likes} - 3 * {article.dislikes}) / {denominator} hours
+                      <br />
+                      Calculated: ({numerator}/{denominator}) {relevanceScore}
+                    </span>
+      }
           </div>
           <Link 
             to={`/article/${article.id}`} // Example route path within FactStream
@@ -484,7 +567,7 @@ return (
             Read more
           </Link>
         </div>
-      ))
+      )})
     )}
 
     {showConfirm && (
