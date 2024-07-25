@@ -41,7 +41,9 @@ const ArticlePage = () => {
 
   // Fetch article data
   useEffect(() => {
+    if (user) {
     fetchUserName(); // test
+  }
     const fetchArticle = async () => {
       try {
         const articleRef = doc(db, 'articles', id);
