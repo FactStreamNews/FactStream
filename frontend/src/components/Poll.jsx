@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import { db, auth } from '../firebase'; // Adjust the path according to your project structure
 
 const Poll = () => {
@@ -26,6 +26,29 @@ const Poll = () => {
     checkAdminStatus();
   }, [user]);
 
+  const fetchPolls = async () => {
+    try {
+      const pollsRef = collection(db, 'polls');
+      const pollsSnap = await getDocs(pollsRef);
+      const pollsList = pollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPolls(pollsList);
+
+      const votedPolls = {};
+      for (const poll of pollsList) {
+        const voteCheck = await checkIfVoted(poll.id);
+        votedPolls[poll.id] = voteCheck;
+      }
+      setHasVoted(votedPolls);
+
+    } catch (error) {
+      console.error('Error fetching polls:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPolls();
+  }, []);
+
   const handleAddPoll = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -35,8 +58,8 @@ const Poll = () => {
     try {
       const pollsRef = collection(db, 'polls');
       const q = query(collection(db, "users"), where("uid", "==", user?.uid));
-      const doc = await getDocs(q);
-      const data = doc.docs[0].data();
+      const docSnap = await getDocs(q);
+      const data = docSnap.docs[0].data();
 
       await addDoc(pollsRef, {
         userId: user.uid,
@@ -48,17 +71,24 @@ const Poll = () => {
       });
       setPollQuestion('');
       setPollOptions(['', '']);
-      // Fetch polls again to update the list
-      const pollsSnap = await getDocs(pollsRef);
-      const pollsList = pollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPolls(pollsList);
+      fetchPolls(); // Fetch polls again to update the list
     } catch (error) {
-      console.error('Error adding poll: ', error);
+      console.error('Error adding poll:', error);
     }
   };
 
-  const handleSelectOption = (pollId, optionIndex) => {
-    setSelectedOption({ ...selectedOption, [pollId]: optionIndex });
+  const checkIfVoted = async (pollId) => {
+    if (!user) {
+      return false;
+    }
+    try {
+      const voteDocRef = doc(db, 'votes', `${pollId}_${user.uid}`);
+      const voteDoc = await getDoc(voteDocRef);
+      return voteDoc.exists();
+    } catch (error) {
+      console.error('Error checking vote status:', error);
+      return false;
+    }
   };
 
   const handleVote = async (pollId, optionIndex) => {
@@ -67,45 +97,34 @@ const Poll = () => {
       return;
     }
 
-    if (hasVoted[pollId]) {
+    const voteCheck = await checkIfVoted(pollId);
+    if (voteCheck) {
       alert('You cannot vote more than once in a poll.');
       return;
     }
 
     try {
-      const pollRef = doc(db, 'polls', pollId);
-      const pollDoc = await getDoc(pollRef);
+      const pollDocRef = doc(db, 'polls', pollId);
+      const pollDoc = await getDoc(pollDocRef);
       if (pollDoc.exists()) {
         const pollData = pollDoc.data();
-        const updatedOptions = pollData.options.map((option, idx) => {
-          if (idx === optionIndex) {
+        const updatedOptions = pollData.options.map((option, index) => {
+          if (index === optionIndex) {
             return { ...option, votes: option.votes + 1 };
           }
           return option;
         });
 
-        await updateDoc(pollRef, { options: updatedOptions });
+        await updateDoc(pollDocRef, { options: updatedOptions });
 
-        setHasVoted({ ...hasVoted, [pollId]: true });
+        const voteDocRef = doc(db, 'votes', `${pollId}_${user.uid}`);
+        await setDoc(voteDocRef, { pollId, userId: user.uid });
 
-        // Fetch updated polls
-        const pollsSnap = await getDocs(collection(db, 'polls'));
-        const pollsList = pollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setPolls(pollsList);
+        fetchPolls(); // Fetch polls again to update the list
       }
     } catch (error) {
-      console.error('Error voting: ', error);
+      console.error('Error voting on poll:', error);
     }
-  };
-
-  const handleOptionChange = (index, value) => {
-    const updatedOptions = [...pollOptions];
-    updatedOptions[index] = value;
-    setPollOptions(updatedOptions);
-  };
-
-  const addOptionField = () => {
-    setPollOptions([...pollOptions, '']);
   };
 
   return (
@@ -127,11 +146,15 @@ const Poll = () => {
                 type="text" 
                 placeholder={`Option ${index + 1}`} 
                 value={option} 
-                onChange={(e) => handleOptionChange(index, e.target.value)} 
+                onChange={(e) => {
+                  const newOptions = [...pollOptions];
+                  newOptions[index] = e.target.value;
+                  setPollOptions(newOptions);
+                }} 
                 required 
               />
             ))}
-            <button type="button" onClick={addOptionField}>Add Option</button>
+            <button type="button" onClick={() => setPollOptions([...pollOptions, ''])}>Add Option</button>
             <button type="submit">Create Poll</button>
           </form>
         </>
@@ -153,13 +176,14 @@ const Poll = () => {
                         name={`poll-${poll.id}`} 
                         value={idx} 
                         checked={selectedOption[poll.id] === idx}
-                        onChange={() => handleSelectOption(poll.id, idx)} 
+                        onChange={() => setSelectedOption({ ...selectedOption, [poll.id]: idx })} 
+                        disabled={hasVoted[poll.id]} // Disable voting if already voted
                       />
                       {option.text} - {option.votes} votes
                     </li>
                   ))}
                 </ul>
-                <button type="submit">Vote</button>
+                <button type="submit" disabled={hasVoted[poll.id]}>Vote</button> {/* Disable vote button if already voted */}
               </form>
             </li>
           ))}
@@ -170,3 +194,4 @@ const Poll = () => {
 };
 
 export default Poll;
+
