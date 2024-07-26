@@ -557,12 +557,12 @@ return (
                       Calculated: ({numerator}/{denominator}) {relevanceScore}
                     </span>  
             }    </div>
-            <Link 
-              to={`/article/${article.id}`} // Example route path within FactStream
+            <a 
+              href={`${article.link}`} // Example route path within FactStream
               className="read-more"
             >
               Read more
-            </Link>
+            </a>
           </div>
         )})
       ) : (
@@ -611,12 +611,12 @@ return (
                     </span>
       }
           </div>
-          <Link 
-            to={`/article/${article.id}`} // Example route path within FactStream
+          <a 
+            href={`${article.link}`} // Example route path within FactStream
             className="read-more"
           >
             Read more
-          </Link>
+          </a>
         </div>
       )})
     )}
