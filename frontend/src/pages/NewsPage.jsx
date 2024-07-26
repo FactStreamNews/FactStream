@@ -506,7 +506,7 @@ return (
         value={filteredSources.join(', ')}
         readOnly
       />
-         {filteredSources.length > 0 && (
+         {/* {filteredSources.length > 0 && (
                 <div className="suggestions">
                   {filteredSources.map((source, index) => (
                     <div key={index} className="suggestion-item" onClick={() => handleSuggestionClick(source)}>
@@ -514,7 +514,7 @@ return (
                     </div>
                   ))}
                 </div>
-              )}
+              )} */}
     </div>
   </div>
 
