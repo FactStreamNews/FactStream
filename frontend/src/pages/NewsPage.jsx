@@ -143,7 +143,7 @@ const NewsPage = () => {
             relevance: calculateRelevance(article.likes || 0, article.dislikes || 0, publishedTimestamp),
             likes: article.likes || 0,
             dislikes: article.dislikes || 0,
-            totalLikes: (article.likes || 0) - (article.dislikes || 0)
+            totalLikes: ((article.likes || 0) - (article.dislikes || 0))
           };
         });
 
@@ -435,30 +435,12 @@ const NewsPage = () => {
        sortedArticles.sort((a, b) => b.relevance - a.relevance);
        setArticles(sortedArticles);
      } else if (selected === 'Most Popular'){
-       sortedArticles.sort((a, b) => {
-        if (a.totalLikes > 0 && b.totalLikes > 0) {
-          return b.likes - a.likes; // Sort by likes descending
-        } else if (a.totalLikes === 0 && b.totalLikes === 0) {
-          return b.published - a.published; // Sort by date descending
-        } else {
-          return b.totalLikes - a.totalLikes; // Sort by likes descending
-        }
-      });
+       sortedArticles.sort((a, b) => b.likes - a.likes);
    // let topArticles = sortedArticles.slice(0,10);
     setArticles(sortedArticles);
     }
     else if (selected === 'Controversial') {
-      sortedArticles.sort((a, b) => {
-        if (a.totalLikes < 0 && b.totalLikes < 0) {
-          return a.totalLikes - b.totalLikes; // Sort by totalLikes ascending
-        } else if (a.totalLikes === 0 && b.totalLikes === 0) {
-          return b.published - a.published; // Sort by date descending
-        } else if (a.totalLikes === 0 || b.totalLikes === 0) {
-          return a.totalLikes - b.totalLikes; // Ensure totalLikes 0 are sorted appropriately
-        } else {
-          return a.totalLikes - b.totalLikes; // Sort by totalLikes ascending
-        }
-      });
+      sortedArticles.sort((a, b) => b.dislikes - a.dislikes);
    // let topArticles = sortedArticles.slice(0,10);
     setArticles(sortedArticles);
     } else if (selected === 'Date') {
@@ -600,6 +582,7 @@ return (
             <span>Published on: {article.published.toLocaleString()}</span>
             <span>Likes: {article.likes || 0}</span>
             <span>Dislikes: {article.dislikes || 0}</span>
+            <span>Total Likes: {article.totalLikes || 0}</span>
             {user && isAdmin && (
                         <span>Quality Score: {article.qualityScore}</span>
                       )}
