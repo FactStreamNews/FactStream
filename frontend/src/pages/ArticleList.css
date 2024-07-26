@@ -12,6 +12,14 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.source-textarea {
+  width: 50%;
+  height: auto;
+  max-height: 150px; /* Adjust as needed */
+  resize: none;
+  overflow-y: auto;
+}
+
 .search-tip {
   font-size: 0.875em;
   color: #666;
@@ -143,6 +151,10 @@
   justify-content: center;
   align-items: center;
   margin-top: 20px;
+}
+
+.search-input {
+  flex-grow: 1;
 }
 
 .pagination button {

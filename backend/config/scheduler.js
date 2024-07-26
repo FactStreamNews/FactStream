@@ -170,5 +170,5 @@ const fetchFeed = async (feedUrl, category, sourceName) => {
 // Set cron expression to once every 2 hours (use * * * * * for every second if trying to re-add asap)
 cron.schedule('0 */2 * * *', () => {
   console.log('Fetching and storing feeds...');
-  fetchAndStoreFeeds();
+  //fetchAndStoreFeeds();
 });

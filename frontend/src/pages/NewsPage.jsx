@@ -282,6 +282,8 @@ const NewsPage = () => {
     if (query.startsWith("source:")) {
       const sourceName = query.split("source:")[1].trim().toLowerCase();
       const filteredBySource = articles.filter(article => article.source && article.source.includes(sourceName));
+      const filtered = sources.filter(source => source.toLowerCase().includes(sourceName));
+      setFilteredSources(filtered);
       setFilteredArticles(filteredBySource);
     } else {
   
@@ -494,6 +496,15 @@ return (
         placeholder="Search articles by title or source"
         value={searchQuery}
         onChange={handleSearchChange}
+        className='search-input'
+      />
+      <br></br>
+        <textarea
+        className='source-textarea'
+        rows="3"
+        cols="50"
+        value={filteredSources.join(', ')}
+        readOnly
       />
          {filteredSources.length > 0 && (
                 <div className="suggestions">
