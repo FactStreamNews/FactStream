@@ -1,6 +1,6 @@
 // firebase.js
 import admin from 'firebase-admin';
-import serviceAccount from './factstream-7f50e-firebase-adminsdk-fgu50-a656ed948e.json' assert { type: 'json' };
+import serviceAccount from './factstream-7f50e-firebase-adminsdk-fgu50-87fb042c27.json' assert { type: 'json' };
 
 
 
